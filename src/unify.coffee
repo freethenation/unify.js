@@ -1,8 +1,6 @@
 # utils
 if typeof module == 'undefined' then window.JSUnify={}
 extern=(name, o)->if typeof module == 'undefined' then window.JSUnify[name] = o else module.exports[name] = o
-if typeof module == 'undefined' then window.JSUnify.internal={} else module.exports.internal = {}
-internal=(name, o)->if typeof module == 'undefined' then window.JSUnify.internal[name] = o else module.exports.internal[name] = o
 str=(o)->
     if typeof o == "undefined"
         return "undefined"
@@ -21,7 +19,7 @@ isobj=(o) -> o!=null and not isarray(o) and typeof o == "object"
 isvaluetype=(o) -> isbool(o) or isstr(o) or isnum(o)
 isfunc=(o) -> !!(o && o.constructor && o.call && o.apply)
 
-# util functions to convert various data types to strings
+# util function to convert data types to strings
 toJson=(elem) ->
     if isarray elem
         return "[#{ (toJson e for e in elem).join(',') }]"
@@ -99,6 +97,11 @@ class Tin
     unparse: () ->
         unboxit @node
 
+#Before an object can be processed it must be "boxed" this consits of
+#1. Wrapping all value types in objects so they can be referenced
+#2. Converting all objects to arrays and flagging them as objects so they can be reconstructed
+#       Objects must be converted to arrays because order matters in unification and an object's keys have no defined order
+#       Objects are converted to arrays whos elements are sorted by object key name
 boxit = (elem,tinlist) ->
     if elem instanceof Variable
         tinlist?[elem.name] =  new Tin( elem.name, null, null )
@@ -175,6 +178,15 @@ bind_tins = (t1,t2,changes) ->
         return bind( t1, null, t2, changes )
 
 # unification!
+unify = (expr1,expr2,changes=[]) ->
+    success = true
+    expr1 = if expr1 instanceof Tin then expr1 else parse(expr1)
+    expr2 = if expr2 instanceof Tin then expr2 else parse(expr2)
+    success = _unify(expr1.node,expr1.varlist,expr2.node,expr2.varlist,changes)
+    if success == false
+        return null
+    else
+        return [expr1,expr2]
 _unify = (n1,v1,n2,v2,changes=[]) ->
     return true if n1 == undefined and n2 == undefined
     return true if n1 == null and n2 == null
@@ -201,16 +213,6 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
                 return false if not _unify(n1[idx],v1,n2[idx],v2, changes)
     return true
 
-unify = (expr1,expr2,changes=[]) ->
-    success = true
-    expr1 = if expr1 instanceof Tin then expr1 else parse(expr1)
-    expr2 = if expr2 instanceof Tin then expr2 else parse(expr2)
-    success = _unify(expr1.node,expr1.varlist,expr2.node,expr2.varlist,changes)
-    if success == false
-        return null
-    else
-        return [expr1,expr2]
-
 rollback = (changes) ->
     for change in changes
         change()
@@ -220,8 +222,8 @@ rollback = (changes) ->
  extern "unify", unify
  extern "variable", (name)->new Variable(name)
  extern "rollback", rollback
- internal "Tin", Tin
- internal "Box", Box
- internal "DictFlag", DictFlag
- internal "toJson", toJson
- internal "Variable", Variable
+ extern "Tin", Tin
+ extern "Box", Box
+ extern "DICT_FLAG", DICT_FLAG
+ extern "toJson", toJson
+ extern "Variable", Variable
