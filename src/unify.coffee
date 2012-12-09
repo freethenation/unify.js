@@ -1,11 +1,8 @@
 # utils
-log=(o)->console.log o
-dir=(o)->console.dir o
-len=(o)-> o.length
-if typeof exports == 'undefined' then window.JSUnify={}
-extern=(name, o)->if typeof exports == 'undefined' then window.JSUnify[name] = o else exports[name] = o
-if typeof exports == 'undefined' then window.JSUnify.internal={} else exports.internal = {}
-internal=(name, o)->if typeof exports == 'undefined' then window.JSUnify.internal[name] = o else exports.internal[name] = o
+if typeof module == 'undefined' then window.JSUnify={}
+extern=(name, o)->if typeof module == 'undefined' then window.JSUnify[name] = o else module.exports[name] = o
+if typeof module == 'undefined' then window.JSUnify.internal={} else module.exports.internal = {}
+internal=(name, o)->if typeof module == 'undefined' then window.JSUnify.internal[name] = o else module.exports.internal[name] = o
 str=(o)->
     if typeof o == "undefined"
         return "undefined"
@@ -13,11 +10,6 @@ str=(o)->
         return "null"
     else
        return o.toString()
-mergeJson=()->
-    ret = {}
-    for arg in arguments
-        ret[name] = value for name, value of arg
-    return ret
 
 # type testing functions
 isundef=(o) -> typeof o == "undefined"
@@ -66,8 +58,7 @@ class Variable
         else
             @name = name
     isHiddenVar: () -> isHiddenVar @name
-    toString: () -> "Var(#{ toJson @name })"
-Var=(name)->new Variable(name)
+    toString: () -> "variable(#{ toJson @name })"
 
 class Tin
     constructor: (name, node, varlist) ->
@@ -79,37 +70,32 @@ class Tin
         t = this
         t = t.varlist while t.varlist instanceof Tin
         return t
-#    isfree:()->!@node?
     isfree: () ->
         t = @end_of_chain()
         return t.node == null and t.varlist == null
     isHiddenVar: () -> isHiddenVar @name
     toString:() -> "new Tin(#{ toJson @name }, #{ toJson @node }, #{ toJson @varlist})"
-
     get: (var_name) ->
         vartin = @varlist[var_name]
         if vartin != null and vartin != undefined
             vartin = vartin.end_of_chain()
-
         if not vartin?
             throw "Variable #{var_name} not in this tin"
         else if not vartin.node? or vartin.node == null
-            return new Var(vartin.name)
+            return new Variable(vartin.name)
         else if vartin.node instanceof Box
             return unboxit(vartin.node,vartin.varlist)
-        else if vartin.node instanceof Var
+        else if vartin.node instanceof Variable
             return unboxit(vartin.node,vartin.varlist)
         else if isarray(vartin.node)
             return ( unboxit(n,vartin.varlist) for n in vartin.node )
         else
             throw "Unknown type in get"
-
     get_all: () ->
         j = {}
         for key of @varlist
             j[key] = @get(key) if !isHiddenVar key
         return j
-
     unparse: () ->
         unboxit @node
 
@@ -146,8 +132,6 @@ unboxit = (tree, varlist) ->
         return tree.value
     else if tree instanceof Variable
         if varlist != undefined
-            # log varlist
-            # log tree
             try
                 tin = get_tin(varlist,tree)
             catch error # Is unbound
@@ -165,7 +149,7 @@ parse = (elem) ->
     return new Tin( null, tree, tinlist )
 
 get_tin = (varlist,node) ->
-    throw "Node must be a Var to get_tin" if not node instanceof Variable
+    throw "Node must be a Variable to get_tin" if not node instanceof Variable
     return varlist[node.name] if varlist?[node.name]?
     throw "Couldn't find node #{node.name} in varlist #{varlist}"
 
@@ -175,6 +159,7 @@ bind = (t,node,varlist,changes) ->
     t.node = node
     t.varlist = varlist
     changes.push( () -> t.node = null; t.varlist = null; t.chainlength = 1 )
+
 bind_tins = (t1,t2,changes) ->
     if not t1.isfree() and not t2.isfree()
         return false
@@ -233,10 +218,10 @@ rollback = (changes) ->
  # export functions so they are visible outside of this file
  extern "parse", parse
  extern "unify", unify
- extern "Var", Var
+ extern "variable", (name)->new Variable(name)
+ extern "rollback", rollback
  internal "Tin", Tin
  internal "Box", Box
  internal "DictFlag", DictFlag
  internal "toJson", toJson
  internal "Variable", Variable
- extern "rollback", rollback
