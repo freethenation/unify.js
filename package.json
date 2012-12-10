@@ -1,0 +1,27 @@
+{
+    "name": "unify"
+  , "version": "0.9.0"
+  , "description": "An Efficient  Javascript Unification Library"
+  , "homepage": "https://github.com/freethenation/unify.js"
+  ,"keywords":['unify','unification','pattern','matching','json','validation','transformation']
+  , "author": "Richard Klafter <rpklafter@yahoo.com>"
+  , "contributors": [
+        { "name": "Richard Klafter", "email": "rpklafter@yahoo.com" }
+	]
+  , "repository":{
+        "type": "git"
+      , "url": "https://github.com/freethenation/unify.js.git"
+    }
+  , "dependencies": { }
+  , "devDependencies": {
+        "coffee-script": ">= 1.3.3"
+      , "uglify-js": "= 1.3.0"
+      , "nodeunit":"= 0.7.4"
+      ,"funcflow":">= 1.0.3"
+    }
+  , "main": "index"
+  , "engines": { "node": ">= 0.4.0" }
+  , "scripts": {
+      "test": "cake build:full" 
+    }
+}
