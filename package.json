@@ -3,7 +3,7 @@
   , "version": "0.9.0"
   , "description": "An Efficient  Javascript Unification Library"
   , "homepage": "https://github.com/freethenation/unify.js"
-  ,"keywords":['unify','unification','pattern','matching','json','validation','transformation','coffeescript']
+  ,"keywords":["unify","unification","pattern","matching","json","validation","transformation","coffeescript"]
   , "author": "Richard Klafter <rpklafter@yahoo.com>"
   , "contributors": [
         { "name": "Richard Klafter", "email": "rpklafter@yahoo.com" }
