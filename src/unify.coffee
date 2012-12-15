@@ -17,7 +17,7 @@ types = {
     isArray: (o) -> o? && Array.isArray o
     isStr: (o) -> typeof o == "string"
     isNum: (o) -> typeof o == "number"
-    isObj: (o) -> o!=null and not types.isArray(o) and typeof o == "object"
+    isObj: (o) -> o != null and not types.isArray(o) and typeof o == "object"
     isValueType: (o) -> types.isBool(o) or types.isStr(o) or types.isNum(o)
     isFunc: (o) -> !!(o && o.constructor && o.call && o.apply)
 }
@@ -26,7 +26,7 @@ types = {
 toJson=(elem) ->
     if types.isArray elem
         return "[#{ map(elem, (i)->toJson(i)).join(',') }]"
-    else if elem instanceof Box or elem instanceof Tin or elem instanceof Variable or elem instanceof DictFlag
+    else if elem instanceof Box or elem instanceof VarTin or elem instanceof TreeTin or elem instanceof Variable or elem instanceof DictFlag
         return str(elem)
     else if types.isObj elem
         return "{#{ (( e + ':' + toJson(elem[e])) for e of elem).join(',') }}"
@@ -52,7 +52,7 @@ g_hidden_var_counter = 1
 HIDDEN_VAR_PREFIX = "__B3qgfO__"
 isHiddenVar = (name) -> name[0...HIDDEN_VAR_PREFIX.length] == HIDDEN_VAR_PREFIX
 class Variable
-    constructor: (name) ->
+    constructor: (name, @typeFunc=null) ->
         if name == "_"
             @name = HIDDEN_VAR_PREFIX + g_hidden_var_counter
             g_hidden_var_counter += 1
@@ -61,28 +61,17 @@ class Variable
     isHiddenVar: () -> isHiddenVar @name
     toString: () -> "variable(#{ toJson @name })"
 
-class Tin
-    constructor: (name, node, varlist) ->
-        @node = if node? then node else null
-        @varlist = if types.isObj(varlist) then varlist else null
-        @chainlength = 1
-        @name = name
+  
+class TreeTin
+    constructor: (@node, @varlist)->
         @changes = []
-    end_of_chain: () ->
-        t = this
-        t = t.varlist while t.varlist instanceof Tin
-        return t
-    isfree: () ->
-        t = @end_of_chain()
-        return t.node == null and t.varlist == null
-    isHiddenVar: () -> isHiddenVar @name
-    toString:() -> 
+    toString: () -> 
         ### Returns the representation of the tin. This is very useful for inspecting the current state of the tin. ###
-        "new Tin(#{ toJson @name }, #{ toJson @node }, #{ toJson @varlist})"
-    get: (varName) ->
+        "new TreeTin(#{ toJson @node }, #{ toJson @varlist})"
+    get: (varName)->
         vartin = @varlist[varName]
         if vartin != null and vartin != undefined
-            vartin = vartin.end_of_chain()
+            vartin = vartin.endOfChain()
         if not vartin?
             throw "Variable #{varName} not in this tin"
         else if not vartin.node? or vartin.node == null
@@ -104,7 +93,7 @@ class Tin
         unboxit @node
     unify: (tin) ->
         changes = []
-        if !(tin instanceof Tin) then tin = box(tin)
+        if !(tin instanceof TreeTin) then tin = box(tin)
         success = _unify(@node, @varlist, tin.node, tin.varlist, changes)
         if success
             @changes.push.apply(@changes, changes) #concat in place
@@ -114,34 +103,29 @@ class Tin
     rollback: () ->
         map(@changes, (change)->change())
         @changes.splice(0, @changes.length) #clear changes
+            
+class VarTin
+    constructor: (@name, @node=null, @varlist=null, @typeFunc=null) ->
+        @chainlength = 1
+    endOfChain: () ->
+        t = this
+        t = t.varlist while t.varlist instanceof VarTin
+        return t
+    isfree: () ->
+        t = @endOfChain()
+        return t.node == null and t.varlist == null
+    isHiddenVar: () -> isHiddenVar @name
+    toString:() -> 
+        ### Returns the representation of the tin. This is very useful for inspecting the current state of the tin. ###
+        "new VarTin(#{ toJson @name }, #{ toJson @node }, #{ toJson @varlist})"
         
-
-boxit = (elem,tinlist) ->
-    if elem instanceof Variable
-        tinlist?[elem.name] =  new Tin( elem.name, null, null )
-        return elem
-    else if elem instanceof Box
-        return elem
-    else if types.isArray elem
-        return map(elem, (i)->boxit(i,tinlist))
-    else if types.isObj elem
-        a = []
-        for key of elem
-            a.push( [boxit(key,tinlist), boxit(elem[key],tinlist)] )
-        a.push(DICT_FLAG)
-        return a.sort()
-    else if types.isValueType elem or elem == null
-        return new Box elem
-    else
-        throw "Don't understand the type of elem"
-
 # Unbox the result and get back plain JS
 unboxit = (tree, varlist) ->
     if types.isArray tree
-        if tree[tree.length-1] == DICT_FLAG # TODO: Check bounds
+        if tree.length > 0 and tree[tree.length-1] == DICT_FLAG
             hash = new Object()
             for e in tree[0...tree.length-1]
-                hash[unboxit(e[0])] = unboxit(e[1])
+                hash[unboxit(e[0], varlist)] = unboxit(e[1], varlist)
             return hash
         else
             return map(tree, (i)->unboxit(i))
@@ -157,24 +141,45 @@ unboxit = (tree, varlist) ->
         else
             return tree
     else
-        throw "Unrecognized type '#{typeof(tree)}' in unbox"
+        throw "Unrecognized type '#{typeof(tree)}' in unbox."
+        
+boxit = (elem, varlist) ->
+    if elem instanceof Variable
+        varlist?[elem.name] =  new VarTin( elem.name, null, null, elem.typeFunc)
+        return elem
+    else if elem instanceof Box
+        return elem
+    else if types.isArray elem
+        return map(elem, (i)->boxit(i,varlist))
+    else if types.isObj elem
+        a = []
+        for key of elem
+            a.push( [boxit(key,varlist), boxit(elem[key],varlist)] )
+        a.push(DICT_FLAG)
+        return a.sort()
+    else if types.isValueType elem or elem == null
+        return new Box elem
+    else
+        "Unrecognized type '#{typeof(elem)}' in box."
 
 # create the relevant tins
 box = (elem) ->
     ### This function boxes an object. Before an object can be processed it must be "boxed" this consits of wrapping all value types in objects and converting all objects to arrays. ###
-    if elem instanceof Tin then return elem
-    tinlist = {}
-    tree = boxit(elem,tinlist)
-    return new Tin( null, tree, tinlist )
+    if elem instanceof TreeTin then return elem
+    varlist = {}
+    tree = boxit(elem,varlist)
+    return new TreeTin(tree, varlist)
 
 get_tin = (varlist,node) ->
-    throw "Node must be a Variable to get_tin" if not node instanceof Variable
+    throw "Node must be a Variable to get_tin!" if not node instanceof Variable
     return varlist[node.name] if varlist?[node.name]?
-    throw "Couldn't find node #{node.name} in varlist #{varlist}"
+    throw "Couldn't find node #{node.name} in varlist #{varlist}!"
 
-bind = (t,node,varlist,changes) ->
-    t = t.end_of_chain()
+bind = (t, node, varlist, changes) ->
+    t = t.endOfChain()
     return false if not t.isfree()
+    if t.typeFunc != null
+        throw "not implemented"
     t.node = node
     t.varlist = varlist
     called = false
@@ -230,7 +235,8 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
  # export functions so they are visible outside of this file
  extern "box", box
  extern "variable", (name)->new Variable(name)
- extern "Tin", Tin
+ extern "TreeTin", TreeTin
+ extern "VarTin", VarTin
  extern "Box", Box
  extern "DICT_FLAG", DICT_FLAG
  extern "toJson", toJson

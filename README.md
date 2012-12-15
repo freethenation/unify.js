@@ -67,7 +67,7 @@ ________________________________
 The algorithm used to preform unification for unify.js has a linear worst case complexity. The naive algorithm has an exponetal worst case complexity. The algorithm requires that objects be "boxed" before an object can be unified. Boxing consits of two steps:
 
 * Wrapping all value types in objects so they can be referenced.
-* Converting all objects to arrays and flagging them as objects so they can be reconstructed. Objects must be converted to arrays because arrays have an order and objects/dictionaries in javascript do not have an order.
+* Converting all objects to arrays and flagging them as objects so they can be reconstructed. Objects must be converted to arrays because unification is order dependent and the keys in javascript objects/dictionaries are unordered.
 
 # Tins
 ________________________________

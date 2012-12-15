@@ -42,7 +42,7 @@ task 'build:min', 'compiles src/unify.coffee to lib/unify.js and then runs Uglif
 task 'build:full', 'compiles src/unify.coffee, runs all tests, and minifies', ->
     funcflow(buildSteps.concat(buildMinSteps, testSteps),{catchExceptions:false}, ()->)
     
-task 'test', 'compiles src/unify.coffee to lib/unify.js', ->
+task 'test', 'compiles src/unify.coffee to lib/unify.js and then runs all the unit tests', ->
     funcflow(buildSteps.concat(testSteps), {catchExceptions:false}, ()->)
     
 compile = (inputFile, callback) ->
