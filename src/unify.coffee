@@ -11,24 +11,26 @@ str=(o)->
 map=(arr, func)->(func(i) for i in arr)
 
 # type testing functions
-isundef=(o) -> typeof o == "undefined"
-isbool=(o) -> typeof o == "boolean"
-isarray=(o) -> o? && Array.isArray o
-isstr=(o) -> typeof o == "string"
-isnum=(o) -> typeof o == "number"
-isobj=(o) -> o!=null and not isarray(o) and typeof o == "object"
-isvaluetype=(o) -> isbool(o) or isstr(o) or isnum(o)
-isfunc=(o) -> !!(o && o.constructor && o.call && o.apply)
+types = {
+    isUndef: (o) -> typeof o == "undefined"
+    isBool: (o) -> typeof o == "boolean"
+    isArray: (o) -> o? && Array.isArray o
+    isStr: (o) -> typeof o == "string"
+    isNum: (o) -> typeof o == "number"
+    isObj: (o) -> o!=null and not types.isArray(o) and typeof o == "object"
+    isValueType: (o) -> types.isBool(o) or types.isStr(o) or types.isNum(o)
+    isFunc: (o) -> !!(o && o.constructor && o.call && o.apply)
+}
 
 # util function to convert data types to strings
 toJson=(elem) ->
-    if isarray elem
+    if types.isArray elem
         return "[#{ map(elem, (i)->toJson(i)).join(',') }]"
     else if elem instanceof Box or elem instanceof Tin or elem instanceof Variable or elem instanceof DictFlag
         return str(elem)
-    else if isobj elem
+    else if types.isObj elem
         return "{#{ (( e + ':' + toJson(elem[e])) for e of elem).join(',') }}"
-    else if isstr elem
+    else if types.isStr elem
         return "\"#{ elem }\""
     else
         return str(elem)
@@ -40,7 +42,7 @@ DICT_FLAG = new DictFlag()
 
 class Box
     constructor: (v) ->
-        if isvaluetype(v) || v == null
+        if types.isValueType(v) || v == null
             @value = v
         else
             throw "Can only box value types, not #{ toJson v }"
@@ -62,7 +64,7 @@ class Variable
 class Tin
     constructor: (name, node, varlist) ->
         @node = if node? then node else null
-        @varlist = if (isobj varlist) then varlist else null
+        @varlist = if types.isObj(varlist) then varlist else null
         @chainlength = 1
         @name = name
         @changes = []
@@ -89,7 +91,7 @@ class Tin
             return unboxit(vartin.node,vartin.varlist)
         else if vartin.node instanceof Variable
             return unboxit(vartin.node,vartin.varlist)
-        else if isarray(vartin.node)
+        else if types.isArray(vartin.node)
             return map(vartin.node, (n)->unboxit(n,vartin.varlist))
         else
             throw "Unknown type in get"
@@ -120,22 +122,22 @@ boxit = (elem,tinlist) ->
         return elem
     else if elem instanceof Box
         return elem
-    else if isarray elem
+    else if types.isArray elem
         return map(elem, (i)->boxit(i,tinlist))
-    else if isobj elem
+    else if types.isObj elem
         a = []
         for key of elem
             a.push( [boxit(key,tinlist), boxit(elem[key],tinlist)] )
         a.push(DICT_FLAG)
         return a.sort()
-    else if isvaluetype elem or elem == null
+    else if types.isValueType elem or elem == null
         return new Box elem
     else
         throw "Don't understand the type of elem"
 
 # Unbox the result and get back plain JS
 unboxit = (tree, varlist) ->
-    if isarray tree
+    if types.isArray tree
         if tree[tree.length-1] == DICT_FLAG # TODO: Check bounds
             hash = new Object()
             for e in tree[0...tree.length-1]
@@ -217,9 +219,9 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
         if not bind(t2, n1, v1, changes)
             return false if not _unify(t2.node,t2.varlist,n1,v1, changes)
     else
-        if n1 instanceof Box and n2 instanceof Box and isvaluetype(n1.value) and isvaluetype(n2.value)
+        if n1 instanceof Box and n2 instanceof Box and types.isValueType(n1.value) and types.isValueType(n2.value)
             return n1.value == n2.value
-        else if isarray(n1) and isarray(n2)
+        else if types.isArray(n1) and types.isArray(n2)
             return false if n1.length != n2.length
             for idx in (num for num in [0..n1.length])
                 return false if not _unify(n1[idx],v1,n2[idx],v2, changes)
@@ -233,3 +235,4 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
  extern "DICT_FLAG", DICT_FLAG
  extern "toJson", toJson
  extern "Variable", Variable
+ extern "types", types
