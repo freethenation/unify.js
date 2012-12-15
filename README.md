@@ -1,4 +1,4 @@
-# unify.js
+# Unify.js
 _________________________
 An Efficient JavaScript Unification Library
 # What is Unification?

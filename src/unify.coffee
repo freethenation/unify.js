@@ -8,6 +8,7 @@ str=(o)->
         return "null"
     else
        return o.toString()
+map=(arr, func)->(func(i) for i in arr)
 
 # type testing functions
 isundef=(o) -> typeof o == "undefined"
@@ -22,7 +23,7 @@ isfunc=(o) -> !!(o && o.constructor && o.call && o.apply)
 # util function to convert data types to strings
 toJson=(elem) ->
     if isarray elem
-        return "[#{ (toJson e for e in elem).join(',') }]"
+        return "[#{ map(elem, (i)->toJson(i)).join(',') }]"
     else if elem instanceof Box or elem instanceof Tin or elem instanceof Variable or elem instanceof DictFlag
         return str(elem)
     else if isobj elem
@@ -89,7 +90,7 @@ class Tin
         else if vartin.node instanceof Variable
             return unboxit(vartin.node,vartin.varlist)
         else if isarray(vartin.node)
-            return ( unboxit(n,vartin.varlist) for n in vartin.node )
+            return map(vartin.node, (n)->unboxit(n,vartin.varlist))
         else
             throw "Unknown type in get"
     getAll: () ->
@@ -101,14 +102,15 @@ class Tin
         unboxit @node
     unify: (tin) ->
         changes = []
-        ret = unify(this, tin, changes)
-        if ret
-            ret[0].changes.push.apply(ret[0].changes, changes) #concat in place
-            ret[1].changes.push.apply(ret[1].changes, changes) #concat in place
-        return ret
+        if !(tin instanceof Tin) then tin = box(tin)
+        success = _unify(@node, @varlist, tin.node, tin.varlist, changes)
+        if success
+            @changes.push.apply(@changes, changes) #concat in place
+            tin.changes.push.apply(tin.changes, changes) #concat in place
+            return [this, tin]
+        else return null
     rollback: () ->
-        for change in @changes
-            change()
+        map(@changes, (change)->change())
         @changes.splice(0, @changes.length) #clear changes
         
 
@@ -119,7 +121,7 @@ boxit = (elem,tinlist) ->
     else if elem instanceof Box
         return elem
     else if isarray elem
-        return (boxit(item,tinlist) for item in elem)
+        return map(elem, (i)->boxit(i,tinlist))
     else if isobj elem
         a = []
         for key of elem
@@ -140,7 +142,7 @@ unboxit = (tree, varlist) ->
                 hash[unboxit(e[0])] = unboxit(e[1])
             return hash
         else
-            return (unboxit(item) for item in tree)
+            return map(tree, (i)->unboxit(i))
     else if tree instanceof Box
         return tree.value
     else if tree instanceof Variable
@@ -157,9 +159,7 @@ unboxit = (tree, varlist) ->
 
 # create the relevant tins
 box = (elem) ->
-    ###
-    This function boxes an object. Before an object can be processed it must be "boxed" this consits of wrapping all value types in objects and converting all objects to arrays.
-    ###
+    ### This function boxes an object. Before an object can be processed it must be "boxed" this consits of wrapping all value types in objects and converting all objects to arrays. ###
     if elem instanceof Tin then return elem
     tinlist = {}
     tree = boxit(elem,tinlist)
@@ -199,16 +199,6 @@ bind_tins = (t1,t2,changes) ->
         t1.chainlength += 1
         return bind( t1, null, t2, changes )
 
-# unification!
-unify = (expr1,expr2,changes=[]) ->
-    success = true
-    expr1 = if expr1 instanceof Tin then expr1 else box(expr1)
-    expr2 = if expr2 instanceof Tin then expr2 else box(expr2)
-    success = _unify(expr1.node,expr1.varlist,expr2.node,expr2.varlist,changes)
-    if success == false
-        return null
-    else
-        return [expr1,expr2]
 _unify = (n1,v1,n2,v2,changes=[]) ->
     return true if n1 == undefined and n2 == undefined
     return true if n1 == null and n2 == null
