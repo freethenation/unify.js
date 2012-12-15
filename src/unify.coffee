@@ -64,6 +64,7 @@ class Tin
         @varlist = if (isobj varlist) then varlist else null
         @chainlength = 1
         @name = name
+        @changes = []
     end_of_chain: () ->
         t = this
         t = t.varlist while t.varlist instanceof Tin
@@ -94,14 +95,20 @@ class Tin
         for key of @varlist
             j[key] = @get(key) if !isHiddenVar key
         return j
-    unparse: () ->
+    unbox: () ->
         unboxit @node
+    unify: (expr) ->
+        changes = []
+        ret = unify(this, expr, changes)
+        if ret
+            ret[0].changes.push.apply(ret[0].changes, changes) #concat in place
+            ret[1].changes.push.apply(ret[1].changes, changes) #concat in place
+        return ret
+    rollback: () ->
+        for change in @changes
+            change()
+        
 
-#Before an object can be processed it must be "boxed" this consits of
-#1. Wrapping all value types in objects so they can be referenced
-#2. Converting all objects to arrays and flagging them as objects so they can be reconstructed
-#       Objects must be converted to arrays because order matters in unification and an object's keys have no defined order
-#       Objects are converted to arrays whos elements are sorted by object key name
 boxit = (elem,tinlist) ->
     if elem instanceof Variable
         tinlist?[elem.name] =  new Tin( elem.name, null, null )
@@ -146,7 +153,11 @@ unboxit = (tree, varlist) ->
         throw "Unrecognized type '#{typeof(tree)}' in unboxit"
 
 # create the relevant tins
-parse = (elem) ->
+box = (elem) ->
+    ###
+    This function boxes an object. Before an object can be processed it must be "boxed" this consits of wrapping all value types in objects and converting all objects to arrays.
+    ###
+    if elem instanceof Tin then return elem
     tinlist = {}
     tree = boxit(elem,tinlist)
     return new Tin( null, tree, tinlist )
@@ -161,7 +172,15 @@ bind = (t,node,varlist,changes) ->
     return false if not t.isfree()
     t.node = node
     t.varlist = varlist
-    changes.push( () -> t.node = null; t.varlist = null; t.chainlength = 1 )
+    called = false
+    changes.push(() ->
+        if called then return
+        called = true
+        t.node = null
+        t.varlist = null
+        t.chainlength = 1
+        return
+    )
 
 bind_tins = (t1,t2,changes) ->
     if not t1.isfree() and not t2.isfree()
@@ -180,8 +199,8 @@ bind_tins = (t1,t2,changes) ->
 # unification!
 unify = (expr1,expr2,changes=[]) ->
     success = true
-    expr1 = if expr1 instanceof Tin then expr1 else parse(expr1)
-    expr2 = if expr2 instanceof Tin then expr2 else parse(expr2)
+    expr1 = if expr1 instanceof Tin then expr1 else box(expr1)
+    expr2 = if expr2 instanceof Tin then expr2 else box(expr2)
     success = _unify(expr1.node,expr1.varlist,expr2.node,expr2.varlist,changes)
     if success == false
         return null
@@ -213,15 +232,9 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
                 return false if not _unify(n1[idx],v1,n2[idx],v2, changes)
     return true
 
-rollback = (changes) ->
-    for change in changes
-        change()
-
  # export functions so they are visible outside of this file
- extern "parse", parse
- extern "unify", unify
+ extern "box", box
  extern "variable", (name)->new Variable(name)
- extern "rollback", rollback
  extern "Tin", Tin
  extern "Box", Box
  extern "DICT_FLAG", DICT_FLAG

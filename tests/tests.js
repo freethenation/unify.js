@@ -111,19 +111,23 @@
       return UnifyTest.__super__.constructor.apply(this, arguments);
     }
 
-    UnifyTest.prototype.parsetest = function(obj) {
+    UnifyTest.prototype.boxtest = function(obj) {
       this.num++;
-      return this.deepEqual(parse(obj).unparse(), obj, "parse");
+      return this.deepEqual(box(obj).unbox(), obj, "box");
     };
 
     UnifyTest.prototype.unifytest = function(obj1, obj2) {
       this.num++;
-      return this.ok(unify(obj1, obj2), "unify");
+      obj1 = box(obj1);
+      obj2 = box(obj2);
+      return this.ok(obj1.unify(obj2), "unify");
     };
 
     UnifyTest.prototype.unifyfailtest = function(obj1, obj2) {
       this.num++;
-      return this.ok(!unify(obj1, obj2), "unify fail");
+      obj1 = box(obj1);
+      obj2 = box(obj2);
+      return this.ok(!obj1.unify(obj2), "unify fail");
     };
 
     UnifyTest.prototype.gettest = function(tin, varValueDict) {
@@ -141,10 +145,10 @@
     };
 
     UnifyTest.prototype.fulltest = function(obj1, obj2, varValueDict1, varValueDict2) {
-      this.parsetest(obj1);
-      this.parsetest(obj2);
-      obj1 = parse(obj1);
-      obj2 = parse(obj2);
+      this.boxtest(obj1);
+      this.boxtest(obj2);
+      obj1 = box(obj1);
+      obj2 = box(obj2);
       this.unifytest(obj1, obj2);
       this.gettest(obj1, varValueDict1);
       return this.gettest(obj2, varValueDict2);
@@ -226,9 +230,9 @@
 
   test("simple black box unify test", function() {
     this.expect(1);
-    return this.ok(unify({
+    return this.ok(box({
       a: [1, 2, 3]
-    }, {
+    }).unify({
       a: [1, variable("b"), 3]
     }));
   });
@@ -236,7 +240,7 @@
   test("variable equal [X,2,X] -> [1,2,1]", function() {
     var tins;
     this.expect(2);
-    tins = unify([variable("x"), 2, variable("x")], [1, 2, 1]);
+    tins = box([variable("x"), 2, variable("x")]).unify([1, 2, 1]);
     this.ok(tins);
     return this.deepEqual(tins[0].get_all(), {
       "x": 1
@@ -246,9 +250,9 @@
   test("simple variable extraction test", function() {
     var tins;
     this.expect(1);
-    tins = unify({
+    tins = box({
       a: [1, 2, 3]
-    }, {
+    }).unify({
       a: [1, variable("b"), 3]
     });
     return this.ok(tins[1].get("b") === 2);
@@ -257,9 +261,9 @@
   test("extract all variables test", function() {
     var tins;
     this.expect(1);
-    tins = unify({
+    tins = box({
       a: [1, 2, 3]
-    }, {
+    }).unify({
       a: [1, variable("b"), 3]
     });
     return this.deepEqual(tins[1].get_all(), {
@@ -291,19 +295,18 @@
   });
 
   test("rollback successful unification", function() {
-    var changes, cobj1, cobj2, obj1, obj2;
+    var cobj1, cobj2, obj1, obj2;
     this.expect(3);
     obj1 = [1, 2, 3];
     obj2 = [variable("A"), variable("B"), 3];
-    this.parsetest(obj1);
-    this.parsetest(obj2);
-    obj1 = parse(obj1);
-    obj2 = parse(obj2);
+    this.boxtest(obj1);
+    this.boxtest(obj2);
+    obj1 = box(obj1);
+    obj2 = box(obj2);
     cobj1 = eval(obj1.toString());
     cobj2 = eval(obj2.toString());
-    changes = [];
-    this.ok(unify(obj1, obj2, changes), "unify");
-    rollback(changes);
+    this.ok(obj1.unify(obj2), "unify");
+    obj1.rollback();
     this.ok(obj1.toString() === cobj1.toString());
     return this.ok(obj2.toString() === cobj2.toString());
   });
