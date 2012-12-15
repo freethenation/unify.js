@@ -124,7 +124,7 @@ test "variable equal [X,2,X] -> [1,2,1]", () ->
     @expect(2)
     tins = box([variable("x"), 2, variable("x")]).unify([1,2,1])
     @ok(tins)
-    @deepEqual(tins[0].get_all(), {"x":1})
+    @deepEqual(tins[0].getAll(), {"x":1})
 #######################
 #extract tests
 #######################
@@ -135,7 +135,7 @@ test "simple variable extraction test", () ->
 test "extract all variables test", () ->
     @expect(1)
     tins = box({a: [1,2,3]}).unify({a: [1,variable("b"),3]})
-    @deepEqual(tins[1].get_all(), {"b":2})
+    @deepEqual(tins[1].getAll(), {"b":2})
 #######################
 #hidden variables tests
 #######################

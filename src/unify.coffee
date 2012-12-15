@@ -73,13 +73,15 @@ class Tin
         t = @end_of_chain()
         return t.node == null and t.varlist == null
     isHiddenVar: () -> isHiddenVar @name
-    toString:() -> "new Tin(#{ toJson @name }, #{ toJson @node }, #{ toJson @varlist})"
-    get: (var_name) ->
-        vartin = @varlist[var_name]
+    toString:() -> 
+        ### Returns the representation of the tin. This is very useful for inspecting the current state of the tin. ###
+        "new Tin(#{ toJson @name }, #{ toJson @node }, #{ toJson @varlist})"
+    get: (varName) ->
+        vartin = @varlist[varName]
         if vartin != null and vartin != undefined
             vartin = vartin.end_of_chain()
         if not vartin?
-            throw "Variable #{var_name} not in this tin"
+            throw "Variable #{varName} not in this tin"
         else if not vartin.node? or vartin.node == null
             return new Variable(vartin.name)
         else if vartin.node instanceof Box
@@ -90,16 +92,16 @@ class Tin
             return ( unboxit(n,vartin.varlist) for n in vartin.node )
         else
             throw "Unknown type in get"
-    get_all: () ->
+    getAll: () ->
         j = {}
         for key of @varlist
             j[key] = @get(key) if !isHiddenVar key
         return j
     unbox: () ->
         unboxit @node
-    unify: (expr) ->
+    unify: (tin) ->
         changes = []
-        ret = unify(this, expr, changes)
+        ret = unify(this, tin, changes)
         if ret
             ret[0].changes.push.apply(ret[0].changes, changes) #concat in place
             ret[1].changes.push.apply(ret[1].changes, changes) #concat in place
@@ -107,6 +109,7 @@ class Tin
     rollback: () ->
         for change in @changes
             change()
+        @changes.splice(0, @changes.length) #clear changes
         
 
 boxit = (elem,tinlist) ->
@@ -150,7 +153,7 @@ unboxit = (tree, varlist) ->
         else
             return tree
     else
-        throw "Unrecognized type '#{typeof(tree)}' in unboxit"
+        throw "Unrecognized type '#{typeof(tree)}' in unbox"
 
 # create the relevant tins
 box = (elem) ->

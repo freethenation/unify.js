@@ -242,7 +242,7 @@
     this.expect(2);
     tins = box([variable("x"), 2, variable("x")]).unify([1, 2, 1]);
     this.ok(tins);
-    return this.deepEqual(tins[0].get_all(), {
+    return this.deepEqual(tins[0].getAll(), {
       "x": 1
     });
   });
@@ -266,7 +266,7 @@
     }).unify({
       a: [1, variable("b"), 3]
     });
-    return this.deepEqual(tins[1].get_all(), {
+    return this.deepEqual(tins[1].getAll(), {
       "b": 2
     });
   });
