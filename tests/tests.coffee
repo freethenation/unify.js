@@ -15,7 +15,7 @@ class Test
         if arg1 != arg2 then throw "'#NotEqual: {str(arg1)}' does not equal '#{str(arg2)}\n   #{message}'"
     deepEqual:(arg1, arg2, message="")->
         @num--
-        if not require('deep-equal')(arg1, arg2) then throw "'#NotEqual: {str(arg1)}' does not equal '#{str(arg2)}\n   #{message}"
+        if not require('deep-equal')(arg1, arg2) then throw "'NotEqual: {str(arg1)}' does not equal '#{str(arg2)}\n   #{message}"
     ok:(bool,message="")->
         @num--
         if not bool then throw "NotOk: false was passed to ok\n   #{message}"
@@ -56,6 +56,8 @@ class UnifyTest extends Test
         obj2 = box(obj2)
         @ok(obj1.unify(obj2), "unify")
     unifyfailtest:(obj1, obj2) ->
+        @boxtest(obj1)
+        @boxtest(obj2)
         @num++
         obj1 = box(obj1)
         obj2 = box(obj2)
@@ -103,7 +105,21 @@ test "unbound variable [y]->[x]", ()->
 test "variable equal [1,X,X] -> [Z,Z,1]", () ->
     @fulltest([1, variable("X"), variable("X")], [variable("Z"), variable("Z"), 1], {X:1}, {Z:1})
 #######################
-#unify fail tests
+# type checking tests
+#######################
+test "variable equal [X:isNum,X] -> [1,1]", ()->
+    @fulltest([variable("a", types.isNum), variable("a")], [1,1], {a:1}, {})
+test "variable equal [X:isNum,X] -> ['str','str']", ()->
+    @unifyfailtest([variable("a", types.isNum), variable("a")], ['str','str'], {a:1}, {})
+test "variable equal [X:isNum,X:isStr] -> ['str','str']", ()->
+    threw = false
+    try
+        @fulltest([variable("a", types.isNum), variable("a", types.isStr)], ['str','str'], {a:1}, {})
+    catch ex # a var defined with two diffrent types should blow up
+        threw = true
+    @ok(threw, "Variable defined with two diffrent types did not throw exception")
+#######################
+# unify fail tests
 #######################
 test "variable equal [X,X] -> [1,2]", ()->
     @unifyfailtest([variable("a"), variable("a")], [1,2])

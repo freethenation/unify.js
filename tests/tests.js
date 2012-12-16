@@ -41,7 +41,7 @@
       }
       this.num--;
       if (!require('deep-equal')(arg1, arg2)) {
-        throw "'#NotEqual: {str(arg1)}' does not equal '" + (str(arg2)) + "\n   " + message;
+        throw "'NotEqual: {str(arg1)}' does not equal '" + (str(arg2)) + "\n   " + message;
       }
     };
 
@@ -124,6 +124,8 @@
     };
 
     UnifyTest.prototype.unifyfailtest = function(obj1, obj2) {
+      this.boxtest(obj1);
+      this.boxtest(obj2);
       this.num++;
       obj1 = box(obj1);
       obj2 = box(obj2);
@@ -214,6 +216,31 @@
     }, {
       Z: 1
     });
+  });
+
+  test("variable equal [X:isNum,X] -> [1,1]", function() {
+    return this.fulltest([variable("a", types.isNum), variable("a")], [1, 1], {
+      a: 1
+    }, {});
+  });
+
+  test("variable equal [X:isNum,X] -> ['str','str']", function() {
+    return this.unifyfailtest([variable("a", types.isNum), variable("a")], ['str', 'str'], {
+      a: 1
+    }, {});
+  });
+
+  test("variable equal [X:isNum,X:isStr] -> ['str','str']", function() {
+    var threw;
+    threw = false;
+    try {
+      this.fulltest([variable("a", types.isNum), variable("a", types.isStr)], ['str', 'str'], {
+        a: 1
+      }, {});
+    } catch (ex) {
+      threw = true;
+    }
+    return this.ok(threw, "Variable defined with two diffrent types did not throw exception");
   });
 
   test("variable equal [X,X] -> [1,2]", function() {

@@ -145,7 +145,13 @@ unboxit = (tree, varlist) ->
         
 boxit = (elem, varlist) ->
     if elem instanceof Variable
-        varlist?[elem.name] =  new VarTin( elem.name, null, null, elem.typeFunc)
+        if varlist[elem.name]?
+            if elem.typeFunc? and varlist[elem.name].typeFunc?
+                throw "A single variable can not be defined with two diffrent types!" if elem.typeFunc != varlist[elem.name].typeFunc
+            else if elem.typeFunc?
+                varlist[elem.name].typeFunc = elem.typeFunc
+        else
+            varlist[elem.name] =  new VarTin( elem.name, null, null, elem.typeFunc)
         return elem
     else if elem instanceof Box
         return elem
@@ -179,7 +185,11 @@ bind = (t, node, varlist, changes) ->
     t = t.endOfChain()
     return false if not t.isfree()
     if t.typeFunc != null
-        throw "not implemented"
+        unboxed = unboxit(node, varlist)
+        if unboxed instanceof Variable and Variable.typeFunc != t.typeFunc
+            return false
+        else if not t.typeFunc(unboxed)
+             return false
     t.node = node
     t.varlist = varlist
     called = false
@@ -191,6 +201,7 @@ bind = (t, node, varlist, changes) ->
         t.chainlength = 1
         return
     )
+    return true
 
 bind_tins = (t1,t2,changes) ->
     if not t1.isfree() and not t2.isfree()
@@ -234,7 +245,7 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
 
  # export functions so they are visible outside of this file
  extern "box", box
- extern "variable", (name)->new Variable(name)
+ extern "variable", (name, typeFunc)->new Variable(name, typeFunc)
  extern "TreeTin", TreeTin
  extern "VarTin", VarTin
  extern "Box", Box
