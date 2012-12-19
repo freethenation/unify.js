@@ -1,6 +1,6 @@
 # utils
-if typeof module == 'undefined' then window.JSUnify={}
-extern=(name, o)->if typeof module == 'undefined' then window.JSUnify[name] = o else module.exports[name] = o
+if typeof module == 'undefined' then window.unify={}
+extern=(name, o)->if typeof module == 'undefined' then window.unify[name] = o else module.exports[name] = o
 str=(o)->
     if typeof o == "undefined"
         return "undefined"

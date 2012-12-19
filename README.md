@@ -120,6 +120,6 @@ The algorithm used to preform unification for unify.js has a linear worst case c
 
 # More Examples
 ________________________________
-### Extracting data
 ### Validating data
+### Extracting data
 ### Transforming data
