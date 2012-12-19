@@ -121,5 +121,49 @@ The algorithm used to preform unification for unify.js has a linear worst case c
 # More Examples
 ________________________________
 ### Validating data
+
+	var unify = require('unify');
+	var variable = unify.variable;
+	var validRectangle = unify.box({
+	  topLeft:[0,0],
+	  topRight:[1,0],
+	  bottomLeft:[0,1],
+	  bottomRight:[1,1]
+	});
+	var invalidRectangle = unify.box({
+	  topLeft:[0], //This is invalid there are not two coordinates!
+	  topRight:[1,0],
+	  bottomLeft:[0,1],
+	  bottomRight:[1,1]
+	});
+	var rectangleValidator = unify.box({
+	  topLeft:[variable("_",unify.isNum),variable("_",unify.isNum)],
+	  topRight:[variable("_",unify.isNum),variable("_",unify.isNum)],
+	  bottomLeft:[variable("_",unify.isNum),variable("_",unify.isNum)],
+	  bottomRight:[variable("_",unify.isNum),variable("_",unify.isNum)]
+	});
+	//Validate validRectangle
+	if (rectangleValidator.unify(validRectangle)) {
+	  console.log("validRectangle is valid!");
+	}
+	else {
+	  console.log("validRectangle is invalid!");
+	}
+	//We need to rollback the unification before we can validate agian
+	rectangleValidator.rollback();
+	//Validate invalidRectangle
+	if (rectangleValidator.unify(invalidRectangle)) {
+	  console.log("invalidRectangle is valid!");
+	}
+	else {
+	  console.log("invalidRectangle is invalid!");
+	}
+	rectangleValidator.rollback();
+	//The above code will print the following to the console
+	//validRectangle is valid!
+	//invalidRectangle is invalid!
+
+You can play with this example at JS Bin [here](http://jsbin.com/unifyvalidate/6/edit)
+
 ### Extracting data
 ### Transforming data
