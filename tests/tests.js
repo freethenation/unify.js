@@ -81,17 +81,21 @@
     };
   };
 
-  exports.RunAll = function() {
+  exports.RunAll = function(throwException) {
     var name;
     for (name in exports) {
       if (name !== "RunAll") {
-        try {
+        if (throwException) {
           exports[name]();
-        } catch (ex) {
-          console.log("Error in Test '" + name + "'");
-          console.log("Message: " + ex);
-          console.log("Stack:\n" + ex.stack);
-          console.log('');
+        } else {
+          try {
+            exports[name]();
+          } catch (ex) {
+            console.log("Error in Test '" + name + "'");
+            console.log("Message: " + ex);
+            console.log("Stack:\n" + ex.stack);
+            console.log('');
+          }
         }
       }
     }

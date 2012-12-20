@@ -29,16 +29,18 @@ test=(name, func)->
     t = new Test(name, func)
     exports[name]=()->t.run()
 
-exports.RunAll = ()->
+exports.RunAll = (throwException)->
     for name of exports
         if name != "RunAll"
-            try
-                exports[name]()
-            catch ex
-                console.log "Error in Test '#{name}'"
-                console.log "Message: #{ex}"
-                console.log "Stack:\n#{ex.stack}"
-                console.log ''
+            if throwException then exports[name]()
+            else
+                try
+                    exports[name]()
+                catch ex
+                    console.log "Error in Test '#{name}'"
+                    console.log "Message: #{ex}"
+                    console.log "Stack:\n#{ex.stack}"
+                    console.log ''
     return
 
 #File specific test functions
