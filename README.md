@@ -204,3 +204,64 @@ You can play with this example at JS Bin by clicking [here](http://jsbin.com/uni
 You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/8/edit)
 
 ### Transforming data
+
+    //This example transforms a rectangle and triangle into an array of lines
+    var unify = require('unify');
+    var arrayToString = function(arr){
+      var out = [];
+      for(var i=0; i < arr.length; i++) {
+        var o = arr[i];
+        if((o !== null) && Array.isArray(o))
+          out.push(arrayToString(o));
+        else
+          out.push(o.toString());
+      }
+      return "[" + out.join() + "]";
+    };
+    var variable = unify.variable;
+    var rectangle = {
+      topLeft:[0,0],
+      topRight:[1,0],
+      bottomLeft:[0,1],
+      bottomRight:[1,1]
+    };
+    var transform  = unify.box({
+      topLeft:variable("topLeft",unify.isNum),
+      topRight:variable("topRight",unify.isNum),
+      bottomLeft:variable("bottomLeft",unify.isNum),
+      bottomRight:variable("bottomRight",unify.isNum),
+      lines:[
+        [variable("topLeft"),variable("topRight")],
+        [variable("topRight"),variable("bottomRight")],
+        [variable("bottomRight"),variable("bottomLeft")],
+        [variable("bottomLeft"),variable("topLeft")]
+      ]
+    });
+    /*
+    need to add the lines element to the rectangle
+    so that it will unify but we don't care what it ends
+    up being after unification.
+    */
+    rectangle.lines = variable("_");
+    rectangle = unify.box(rectangle);
+    //preform the actual unification
+    if (transform.unify(rectangle)) {
+      //unbox transform so it is normal json object
+      var transformed = transform.unbox();
+      //loop through the lines and print them
+      for (var i=0; i<transformed.lines.length; i++) {
+        console.log("line "+i.toString()+": "+
+          arrayToString(transformed.lines[i]));
+      }
+    }
+    else {
+      console.log("Somthing went wrong. Unification failed!");
+    }
+    transform.rollback();
+    //The above code will print the following to the console
+    //"line 0: [[0,0],[1,0]]"
+    //"line 0: [[0,0],[1,0]]"
+    //"line 2: [[1,1],[0,1]]"
+    //"line 3: [[0,1],[0,0]]"
+    
+You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/17/edit)
