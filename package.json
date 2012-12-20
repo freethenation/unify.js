@@ -1,6 +1,6 @@
 {
     "name": "unify"
-  , "version": "0.9.4"
+  , "version": "0.9.5"
   , "description": "An Efficient  Javascript Unification Library"
   , "homepage": "https://github.com/freethenation/unify.js"
   ,"keywords":["unify","unification","pattern","matching","json","validation","transformation","coffeescript"]
