@@ -79,17 +79,17 @@ The variable name is how the variables bound value will be retrieved after unifi
 
     var unify = require('unify');
     var variable = unify.variable;
-    var isNum = function(o){return typeof(o) == "number"}
-    var expr1 = unify.box([variable("X", isNum),1])
-    var expr2 = unify.box(["string",1])
-    var expr3 = unify.box([1,1])
-    if expr1.unify(expr2) {
+    var isNum = function(o){return typeof(o) == "number";};
+    var expr1 = unify.box([variable("X", isNum),1]);
+    var expr2 = unify.box(["string",1]);
+    var expr3 = unify.box([1,1]);
+    if (expr1.unify(expr2)) {
       console.log("Unification successful! X=" + expr1.get("X").toString());
     }
     else {
       console.log("Unification unsuccessful!");
     }
-    if expr1.unify(expr3) {
+    if (expr1.unify(expr3)) {
       console.log("Unification successful! X=" + expr1.get("X").toString());
     }
     else {
@@ -98,6 +98,8 @@ The variable name is how the variables bound value will be retrieved after unifi
     //The following should be written to the console
     //Unification unsuccessful!
     //Unification successful! X=1
+
+You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/18/edit)
 
 In the above example the first unification fails because isNum function returns false when the value "string" is passed. The second unification succeeds because isNum returns true when the value 1 is passed. There are several type checking functions included with unify.js which can be found in the unify.types namespace.
 
