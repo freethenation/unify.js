@@ -1,4 +1,4 @@
-[![build status](https://secure.travis-ci.org/freethenation/unify.js.png)](http://travis-ci.org/freethenation/unify.js)
+[![Build Status](https://travis-ci.org/freethenation/unify.js.png?branch=master)](https://travis-ci.org/freethenation/unify.js)
 # Unify.js
 _________________________
 Unify.js is an efficient javascript unification library that operates in linear time.
