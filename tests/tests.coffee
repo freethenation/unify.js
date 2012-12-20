@@ -12,10 +12,10 @@ class Test
         @num = num
     equal:(arg1, arg2, message="''")->
         @num--
-        if arg1 != arg2 then throw "'#NotEqual: {str(arg1)}' does not equal '#{str(arg2)}\n   #{message}'"
+        if arg1 != arg2 then throw "NotEqual: '#{str(arg1)}' does not equal '#{str(arg2)}'\n   #{message}"
     deepEqual:(arg1, arg2, message="")->
         @num--
-        if not require('deep-equal')(arg1, arg2) then throw "'NotEqual: {str(arg1)}' does not equal '#{str(arg2)}\n   #{message}"
+        if not require('deep-equal')(arg1, arg2) then throw "NotEqual: '#{str(arg1)}' does not equal '#{str(arg2)}'\n   #{message}"
     ok:(bool,message="")->
         @num--
         if not bool then throw "NotOk: false was passed to ok\n   #{message}"
@@ -133,6 +133,12 @@ test "variable unequal [1,X,X] -> [Z,Z,3]", () ->
 test "simple black box unify test", () ->
     @expect(1)
     @ok(box({a: [1,2,3]}).unify({a: [1,variable("b"),3]}))
+test "unbox bound variable", () ->
+    @expect(2)
+    i1 = box([1,variable("a")])
+    i2 = box([1,1])
+    @ok(i1.unify(i2))
+    @deepEqual(i1.unbox(),i2.unbox())
 #######################
 #unify tests
 #######################

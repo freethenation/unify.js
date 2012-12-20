@@ -31,7 +31,7 @@
       }
       this.num--;
       if (arg1 !== arg2) {
-        throw "'#NotEqual: {str(arg1)}' does not equal '" + (str(arg2)) + "\n   " + message + "'";
+        throw "NotEqual: '" + (str(arg1)) + "' does not equal '" + (str(arg2)) + "'\n   " + message;
       }
     };
 
@@ -41,7 +41,7 @@
       }
       this.num--;
       if (!require('deep-equal')(arg1, arg2)) {
-        throw "'NotEqual: {str(arg1)}' does not equal '" + (str(arg2)) + "\n   " + message;
+        throw "NotEqual: '" + (str(arg1)) + "' does not equal '" + (str(arg2)) + "'\n   " + message;
       }
     };
 
@@ -262,6 +262,15 @@
     }).unify({
       a: [1, variable("b"), 3]
     }));
+  });
+
+  test("unbox bound variable", function() {
+    var i1, i2;
+    this.expect(2);
+    i1 = box([1, variable("a")]);
+    i2 = box([1, 1]);
+    this.ok(i1.unify(i2));
+    return this.deepEqual(i1.unbox(), i2.unbox());
   });
 
   test("variable equal [X,2,X] -> [1,2,1]", function() {

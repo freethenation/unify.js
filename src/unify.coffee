@@ -60,7 +60,6 @@ class Variable
             @name = name
     isHiddenVar: () -> isHiddenVar @name
     toString: () -> "variable(#{ toJson @name })"
-
   
 class TreeTin
     constructor: (@node, @varlist)->
@@ -90,7 +89,7 @@ class TreeTin
             j[key] = @get(key) if !isHiddenVar key
         return j
     unbox: () ->
-        unboxit @node
+        unboxit @node, @varlist
     unify: (tin) ->
         changes = []
         if !(tin instanceof TreeTin) then tin = box(tin)
@@ -121,6 +120,7 @@ class VarTin
         
 # Unbox the result and get back plain JS
 unboxit = (tree, varlist) ->
+    #console.log "unbox( #{tree};  #{varlist} )"
     if types.isArray tree
         if tree.length > 0 and tree[tree.length-1] == DICT_FLAG
             hash = new Object()
@@ -128,16 +128,21 @@ unboxit = (tree, varlist) ->
                 hash[unboxit(e[0], varlist)] = unboxit(e[1], varlist)
             return hash
         else
-            return map(tree, (i)->unboxit(i))
+            return map(tree, (i)->unboxit(i,varlist))
     else if tree instanceof Box
         return tree.value
     else if tree instanceof Variable
+        #   console.log tree
         if varlist != undefined
+            #       console.log 'varlist'
             try
                 tin = get_tin(varlist,tree)
             catch error # Is unbound
                 return tree
-            return unboxit(tin.node,tin.varlist)
+            if tin.node? and tin.varlist?
+                return unboxit(tin.node,tin.varlist)
+            else
+                return tree
         else
             return tree
     else
