@@ -75,7 +75,19 @@ Variables are placeholders that can be bound/replaced when unifying two data str
     
     unify.variable(variableName, typeFunc);
 
-The variable name is how the variables bound value will be retrieved after unification. The typeFunc is an optional parameter that allows you ensure only certain types are bound to the variable. The example below makes this more clear.
+Two variable with the same name will have the same value after unification. The value may be looked up in the unification output using this name. The optional `typeFunc` parameter allows the definition of a validation function which must take a single input and return true or false. If a `typeFunc` is defined, the variable cannot be bound to a value unless the `typeFunc` returns true for that value. Furthermore, two variables cannot be bound together unless the `typeFunc` parameters are identical.
+
+Several predefined type functions are provided in the `unify.types` namespace:
+
+* isUndef: returns true if the variable is undefined
+* isBool: returns true if the variable is a boolean
+* isArray: returns true if the variable is an array
+* isStr: returns true if the variable is a string
+* isNum: returns true if the variable is a number
+* isObj: returns true if the variable is an object
+* isValueType: returns true if the variable is a boolean, string, or number
+
+The name "_" creates a wildcard variable which can take on any value, bind to any other variable, and whose value cannot be retrieved.
 
     var unify = require('unify');
     var variable = unify.variable;
@@ -101,7 +113,7 @@ The variable name is how the variables bound value will be retrieved after unifi
 
 You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/18/edit)
 
-In the above example the first unification fails because isNum function returns false when the value "string" is passed. The second unification succeeds because isNum returns true when the value 1 is passed. There are several type checking functions included with unify.js which can be found in the unify.types namespace.
+In the above example the first unification fails because `isNum` function returns false when the value `"string"` is passed. The second unification succeeds because `isNum` returns true when the value `1` is passed.
 
 # Boxing
 ________________________________
