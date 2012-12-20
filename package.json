@@ -6,7 +6,8 @@
   ,"keywords":["unify","unification","pattern","matching","json","validation","transformation","coffeescript"]
   , "author": "Richard Klafter <rpklafter@yahoo.com>"
   , "contributors": [
-        { "name": "Richard Klafter", "email": "rpklafter@yahoo.com" }
+        { "name": "Richard Klafter", "email": "rpklafter@yahoo.com" },
+        { "name": "Eric Swanson", "email": "eswanson@alloscomp.com" }
 	]
   , "repository":{
         "type": "git"
