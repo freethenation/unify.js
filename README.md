@@ -163,7 +163,44 @@ ________________________________
 	//validRectangle is valid!
 	//invalidRectangle is invalid!
 
-You can play with this example at JS Bin [here](http://jsbin.com/unifyvalidate/6/edit)
+You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/6/edit)
 
 ### Extracting data
+
+	var unify = require('unify');
+	var arrayToString = function(arr){
+	  return "[" + arr.join() + "]";
+	};
+	var variable = unify.variable;
+	var rectangle = unify.box({
+	  topLeft:[0,0],
+	  topRight:[1,0],
+	  bottomLeft:[0,1],
+	  bottomRight:[1,1]
+	});
+	var extractor = unify.box({
+	  topLeft:variable("topLeft",unify.isNum),
+	  topRight:variable("topRight",unify.isNum),
+	  bottomLeft:variable("bottomLeft",unify.isNum),
+	  bottomRight:variable("bottomRight",unify.isNum)
+	});
+	//extract the corners of the rectangle
+	if (extractor.unify(rectangle)) {
+	  console.log("topLeft: " + arrayToString(extractor.get("topLeft")));
+	  console.log("topRight: " + arrayToString(extractor.get("topRight")));
+	  console.log("bottomLeft: " + arrayToString(extractor.get("bottomLeft")));
+	  console.log("bottomRight: " + arrayToString(extractor.get("bottomRight")));
+	}
+	else {
+	  console.log("Somthing went wrong. Unification failed!");
+	}
+	extractor.rollback();
+	//The above code will print the following to the console
+	//"topLeft: [0,0]"
+	//"topRight: [1,0]"
+	//"bottomLeft: [0,1]"
+	//"bottomRight: [1,1]"
+	
+You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/8/edit)
+
 ### Transforming data
