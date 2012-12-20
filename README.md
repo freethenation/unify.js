@@ -1,6 +1,7 @@
 # Unify.js
 _________________________
-An Efficient JavaScript Unification Library
+Unify.js is an efficient javascript unification library that operates in linear time.
+ 
 # What is Unification?
 _________________________
 Unification is an algorithmic process that attempts to make two data structures identical by substituting/binding portions of them to each other. It is probably easiest to understand what unification is by looking at an example.
@@ -15,6 +16,9 @@ Unification is an algorithmic process that attempts to make two data structures 
         size:[100, 100],
         color:"#000000"
     };
+    //Unify the rectangles
+    out.get("height") == 100
+    out.get("location") == [25,35]
 
 In the above example if the two rectangle structures were unified. Each of them have a variable which is substituted/bound to a value in the other. The variable "height" in rectangle1 would be bound to the value "100" from rectangle2. The variable "location" in rectangle2 is bound to the value "[25, 35]" from rectangle1.
 
