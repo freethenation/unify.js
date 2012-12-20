@@ -34,8 +34,8 @@ Unification has lots of uses including. Examples of how each of these tasks can 
 ________________________________
 Below is a basic example of how use unify.js.
 
-    //import unify.js
-    var unify = require('unify');
+    import unify.js
+    //var unify = require('unify');
     var variable = unify.variable;
     //create some data structures to be unified
     var rectangle1 = {
@@ -56,16 +56,18 @@ Below is a basic example of how use unify.js.
     //check if unification succeeded and print the results
     if(result) {
       //print "rectangle1 height: 100" to the console
-      console.log("rectangle1  height: " 
-        + boxedRect1.get("height").toString());
+      console.log("rectangle1  height: " + 
+        boxedRect1.get("height").toString());
       //print "rectangle2 location: [25, 35]" to the console
-      console.log("rectangle2 location: [" 
-        + boxedRect1.get("location")[0] + ", " 
-        + boxedRect1.get("location")[1]  + "]");
+      console.log("rectangle2 location: [" + 
+        boxedRect2.get("location")[0] + ", " +
+        boxedRect2.get("location")[1]  + "]");
     }
     else {
       console.log('Unification Failed!');
     }
+    
+You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/21/edit)
 
 If you were unable to follow along don't worry the various aspects of the code above are explained in more detail below.
 
