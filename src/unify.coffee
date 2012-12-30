@@ -69,20 +69,12 @@ class TreeTin
         "new TreeTin(#{ toJson @node }, #{ toJson @varlist})"
     get: (varName)->
         vartin = @varlist[varName]
-        if vartin != null and vartin != undefined
-            vartin = vartin.endOfChain()
-        if not vartin?
-            throw "Variable #{varName} not in this tin"
-        else if not vartin.node? or vartin.node == null
+        if not vartin then throw "Variable #{varName} not in this tin"
+        vartin = vartin.endOfChain()
+        if not vartin.node
             return new Variable(vartin.name)
-        else if vartin.node instanceof Box
-            return unboxit(vartin.node,vartin.varlist)
-        else if vartin.node instanceof Variable
-            return unboxit(vartin.node,vartin.varlist)
-        else if types.isArray(vartin.node)
-            return map(vartin.node, (n)->unboxit(n,vartin.varlist))
         else
-            throw "Unknown type in get"
+            return unboxit(vartin.node, vartin.varlist)
     getAll: () ->
         j = {}
         for key of @varlist
@@ -96,9 +88,19 @@ class TreeTin
         success = _unify(@node, @varlist, tin.node, tin.varlist, changes)
         if success
             @changes.push.apply(@changes, changes) #concat in place
-            tin.changes.push.apply(tin.changes, changes) #concat in place
+            @changes.push.apply(tin.changes, changes) #concat in place
             return [this, tin]
         else return null
+    bind: (varName, expr) ->
+        vartin = @varlist[varName].endOfChain()
+        if not vartin.isfree() then return null
+        if !(expr instanceof TreeTin) then expr = box(expr)
+        changes = []
+        if(bind(vartin, expr.node, expr.varlist, changes))
+            @changes.push.apply(@changes, changes) #concat in place
+            @changes.push.apply(expr.changes, changes) #concat in place
+            return [this,expr]
+        return null
     rollback: () ->
         map(@changes, (change)->change())
         @changes.splice(0, @changes.length) #clear changes
@@ -117,10 +119,11 @@ class VarTin
     toString:() -> 
         ### Returns the representation of the tin. This is very useful for inspecting the current state of the tin. ###
         "new VarTin(#{ toJson @name }, #{ toJson @node }, #{ toJson @varlist})"
+    unbox: () ->
+        if @node then return unboxit(@node, @varlist) else return new Variable(@name)
         
 # Unbox the result and get back plain JS
 unboxit = (tree, varlist) ->
-    #console.log "unbox( #{tree};  #{varlist} )"
     if types.isArray tree
         if tree.length > 0 and tree[tree.length-1] == DICT_FLAG
             hash = new Object()
@@ -132,9 +135,7 @@ unboxit = (tree, varlist) ->
     else if tree instanceof Box
         return tree.value
     else if tree instanceof Variable
-        #   console.log tree
         if varlist != undefined
-            #       console.log 'varlist'
             try
                 tin = get_tin(varlist,tree)
             catch error # Is unbound
@@ -146,7 +147,7 @@ unboxit = (tree, varlist) ->
         else
             return tree
     else
-        throw "Unrecognized type '#{typeof(tree)}' in unbox."
+    throw "Unrecognized type '#{typeof(tree)}' in unbox."
         
 boxit = (elem, varlist) ->
     if elem instanceof Variable
@@ -186,6 +187,10 @@ get_tin = (varlist,node) ->
     return varlist[node.name] if varlist?[node.name]?
     throw "Couldn't find node #{node.name} in varlist #{varlist}!"
 
+# t: variableTin
+# node: variableTin node
+# varlist: variableTin varlist
+# changes: list of changes
 bind = (t, node, varlist, changes) ->
     t = t.endOfChain()
     return false if not t.isfree()
@@ -208,6 +213,9 @@ bind = (t, node, varlist, changes) ->
     )
     return true
 
+# t1: variableTin 1
+# t2: variableTin 2
+# changes: list of changes
 bind_tins = (t1,t2,changes) ->
     if not t1.isfree() and not t2.isfree()
         return false
@@ -222,6 +230,11 @@ bind_tins = (t1,t2,changes) ->
         t1.chainlength += 1
         return bind( t1, null, t2, changes )
 
+# n1: TreeTin 1
+# v1: variableList 1
+# n2: TreeTin 2
+# v2: variableList 2
+# changes: list of changes
 _unify = (n1,v1,n2,v2,changes=[]) ->
     return true if n1 == undefined and n2 == undefined
     return true if n1 == null and n2 == null

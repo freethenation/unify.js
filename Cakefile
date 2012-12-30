@@ -65,5 +65,6 @@ writeFile = (filename, data, callback) ->
 
 test = (inputFile, throwException, callback) ->
     tests = require(inputFile)
+    #tests["simple no var bind test"]()
     tests.RunAll(throwException)
     callback()

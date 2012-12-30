@@ -176,6 +176,16 @@
     return this.fulltest({}, {}, {}, {});
   });
 
+  test("empty obj {test:'test', cool:1},{test:'test', cool:1}", function() {
+    return this.fulltest({
+      test: "test",
+      cool: 1
+    }, {
+      test: "test",
+      cool: 1
+    }, {}, {});
+  });
+
   test("null test [null] -> [null]", function() {
     return this.fulltest([null], [null], {}, {});
   });
@@ -275,6 +285,26 @@
     i2 = box([1, 1]);
     this.ok(i1.unify(i2));
     return this.deepEqual(i1.unbox(), i2.unbox());
+  });
+
+  test("bind test with no var", function() {
+    var i1, i2;
+    this.expect(1);
+    i1 = box([1, variable("a")]);
+    i2 = {
+      test: "test",
+      fun: "somthing"
+    };
+    return this.deepEqual(i1.bind("a", i2)[0].get("a"), i2);
+  });
+
+  test("bind test with var", function() {
+    var i1, i2, i3;
+    this.expect(1);
+    i1 = box([1, variable("a")]);
+    i2 = [1, variable("b")];
+    i3 = [1, [1, 2]];
+    return this.deepEqual(i1.bind("a", i2)[0].unify(i3)[0].unbox(), i3);
   });
 
   test("variable equal [X,2,X] -> [1,2,1]", function() {

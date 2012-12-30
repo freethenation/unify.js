@@ -89,6 +89,8 @@ test=(name, func)->
 #######################
 test "empty obj {} -> {}", ()->
     @fulltest({}, {}, {}, {})
+test "empty obj {test:'test', cool:1},{test:'test', cool:1}", ()->
+    @fulltest({test:"test", cool:1},{test:"test", cool:1}, {}, {})
 test "null test [null] -> [null]", ()->
     @fulltest([null], [null], {}, {})
 test "variable equal [X] -> [1]", ()->
@@ -141,6 +143,20 @@ test "unbox bound variable", () ->
     i2 = box([1,1])
     @ok(i1.unify(i2))
     @deepEqual(i1.unbox(),i2.unbox())
+#######################
+#bind tests
+#######################
+test "bind test with no var", ()->
+    @expect(1)
+    i1 = box([1,variable("a")])
+    i2 = {test:"test", fun:"somthing"}
+    @deepEqual(i1.bind("a",i2)[0].get("a"),i2)
+test "bind test with var", ()->
+    @expect(1)
+    i1 = box([1,variable("a")])
+    i2 = [1,variable("b")]
+    i3 = [1,[1,2]]
+    @deepEqual(i1.bind("a",i2)[0].unify(i3)[0].unbox(), i3)
 #######################
 #unify tests
 #######################
