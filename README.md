@@ -129,11 +129,12 @@ The algorithm used by unify.js requires that objects be "boxed" before an object
 ________________________________
 Calling the box function on an object returns a TreeTin. A TreeTin provides a variety of methods related to unification and is the main interface through which you will work with unify.js. Some of the useful methods are:
 
-* TreeTin.unify(tin) : Unifies two tines together. Unify returns null when unification fails otherwise it returns [tin1, tin2].
+* TreeTin.unify(tin) : Unifies two tines together. Unify returns null when unification fails otherwise it returns `[tin1, tin2]`.
 * TreeTin.get(varName) : Gets a variables bound value. If a variable is unbound or is bound to another variable a Variable object is returned.
 * TreeTin.getAll() : Returns a dictionary containing all variables and their currently bound values.
 * TreeTin.unbox() : Reverts the box operation returning the original json with bound variable values substituted in.
 * TreeTin.rollback() : Reverts all variable bindings that have resulted from unifying this tin with other tins.
+* TreeTin.bind(varName, expr) : Allows you to manually bind a variable to an expression without unifying. If the variable is already bound null is returned otherwise `[tin, exprTin]` is returned. The expression can contain variables.
 
 # Algorithm and Performance
 ________________________________
