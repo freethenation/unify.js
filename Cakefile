@@ -51,11 +51,15 @@ compile = (inputFile, callback) ->
     callback?(coffee.compile(inputFile))
 
 compress = (inputFile, callback) ->
-    uglify = require "uglify-js"
-    ast = uglify.parser.parse(inputFile); # parse code and get the initial AST
-    ast = uglify.uglify.ast_mangle(ast); # get a new AST with mangled names
-    ast = uglify.uglify.ast_squeeze(ast); # get an AST with compression optimizations
-    callback?(uglify.uglify.gen_code(ast))
+    UglifyJS = require "uglify-js"
+    toplevel = UglifyJS.parse(inputFile)
+    toplevel.figure_out_scope()
+    compressor = UglifyJS.Compressor()
+    compressed_ast = toplevel.transform(compressor)
+    compressed_ast.figure_out_scope()
+    compressed_ast.compute_char_frequency()
+    compressed_ast.mangle_names()
+    callback?(compressed_ast.print_to_string())
     
 readFile = (filename, callback) ->
     data = fs.readFile(filename, 'utf8', (err, data)-> if err then throw err else callback(data))
