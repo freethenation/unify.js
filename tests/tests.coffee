@@ -157,6 +157,14 @@ test "bind test with var", ()->
     i2 = [1,variable("b")]
     i3 = [1,[1,2]]
     @deepEqual(i1.bind("a",i2)[0].unify(i3)[0].unbox(), i3)
+test "bind rollback", ()->
+    @expect(2)
+    i1 = [1,variable("a")]
+    i2 = box(i1)
+    i2.bind("a", {test:"test"})
+    @deepEqual([1,{test:"test"}],i2.unbox())
+    i2.rollback()
+    @deepEqual(i1,i2.unbox())
 #######################
 #unify tests
 #######################

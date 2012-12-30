@@ -307,6 +307,23 @@
     return this.deepEqual(i1.bind("a", i2)[0].unify(i3)[0].unbox(), i3);
   });
 
+  test("bind rollback", function() {
+    var i1, i2;
+    this.expect(2);
+    i1 = [1, variable("a")];
+    i2 = box(i1);
+    i2.bind("a", {
+      test: "test"
+    });
+    this.deepEqual([
+      1, {
+        test: "test"
+      }
+    ], i2.unbox());
+    i2.rollback();
+    return this.deepEqual(i1, i2.unbox());
+  });
+
   test("variable equal [X,2,X] -> [1,2,1]", function() {
     var tins;
     this.expect(2);

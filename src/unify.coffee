@@ -104,6 +104,7 @@ class TreeTin
     rollback: () ->
         map(@changes, (change)->change())
         @changes.splice(0, @changes.length) #clear changes
+        return
             
 class VarTin
     constructor: (@name, @node=null, @varlist=null, @typeFunc=null) ->
