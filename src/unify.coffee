@@ -49,8 +49,8 @@ class Box
     toString: () -> ("new Box(#{ toJson(@value) })")
 
 g_hidden_var_counter = 1
-HIDDEN_VAR_PREFIX = "__B3qgfO__"
-isHiddenVar = (name) -> name[0...HIDDEN_VAR_PREFIX.length] == HIDDEN_VAR_PREFIX
+HIDDEN_VAR_PREFIX = "__HIDDEN__"
+isHiddenVar = (name) -> name.substring(0,HIDDEN_VAR_PREFIX.length) == HIDDEN_VAR_PREFIX
 class Variable
     constructor: (name, @typeFunc=null) ->
         if name == "_"
