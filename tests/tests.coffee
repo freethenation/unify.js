@@ -225,6 +225,8 @@ test "list variable in same place different length [$a,1,2]->[$b,2]", ()->
     @fulltest([variable("$a"),1,2],[variable("$b"),2],{"a":[]},{"b":[1]})
 test "list variable reference [$a,a]->[1,2,[1,2]]", ()->
     @fulltest([variable("$a"),variable("a")],[1,2,[1,2]],{"a":[1,2]},{})
+test "list vairable ensure empty binding [$a,a]->[[]]", ()->
+    @fulltest([variable("$a"),variable("a")],[[]],{"a":[]},{})
 #######################
 #rollback tests
 #######################

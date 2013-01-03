@@ -259,55 +259,46 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
         if not bind(t1, n2, v2, changes) then return _unify(t1.node,t1.varlist,n2,v2, changes)
     else if n2 instanceof Variable
         return _unify(n2,v2,n1,v1,changes)
-    else if n1 instanceof Box and n2 instanceof Box # and types.isValueType(n1.value) and types.isValueType(n2.value)
+    else if n1 instanceof Box and n2 instanceof Box
         return n1.value == n2.value
     else if types.isArray(n1) and types.isArray(n2)
-        isListVar = (n)->n instanceof Variable and n.isListVar
-        realLength = (n)->n.length - (if n.hasListVar then 1 else 0)
-        removeListVars = (arr, varList)->
-            ret = []
-            for i in arr
-                if isListVar(i) 
-                    if not _unify(i,varList,[],[],changes) then return false
-                else ret.push(i)
-            return ret
-        if realLength(n1) == realLength(n2)
-            idx1 = 0
-            idx2 = 0
-            while idx1 < n1.length and idx2 < n2.length
-                if isListVar(n1[idx1])
-                    if not _unify(n1[idx1],v1,[],[],changes) then return false
-                    idx1++
-                    continue
-                else if isListVar(n2[idx2])
-                    if not _unify(n2[idx2],v2,[],[],changes) then return false
-                    idx2++
-                    continue
-                else
-                    if not _unify(n1[idx1],v1,n2[idx2],v2,changes) then return false
-                    idx1++
-                    idx2++
-            while idx1 < n1.length
-                if not _unify(n1[idx1],v1,[],[],changes) then return false
-                idx1++
-            while idx2 < n2.length
-                if not _unify(n2[idx2],v2,[],[],changes) then return false
-                idx2++
+        n1RealLength = n1.length - (if n1.hasListVar then 1 else 0)
+        n2RealLength = n2.length - (if n2.hasListVar then 1 else 0)
+        if n1RealLength == n2RealLength # handle the case that both list have the same real length
+            if n1.hasListVar
+                n1 = removeListVars(n1,v1,changes)
+                if !n1 then return false
+            if n2.hasListVar
+                n2 = removeListVars(n2,v2,changes)
+                if !n2 then return false
+            idx = 0
+            while idx < n1.length
+                if not _unify(n1[idx],v1,n2[idx],v2,changes) then return false
+                idx++
             return true
-        if realLength(n1) > realLength(n2) then return _unify(n2,v2,n1,v1,changes)
-        # at this point realLength(n1) < realLength(n2)
-        n2 = removeListVars(n2, v2)
+        # at this point we know the lists do not have the same length
+        if n1RealLength > n2RealLength then return _unify(n2,v2,n1,v1,changes)
+        # at this point n1RealLength < n2RealLength
+        n2 = removeListVars(n2,v2,changes)
         if !n2 then return false
         idx1 = 0
         idx2 = 0
         while idx2 < n2.length
-            if isListVar(n1[idx1])
-                if not _unify(n1[idx1],v1,n2.slice(idx2,idx2+realLength(n2)-realLength(n1)),v2,changes) then return false
-                idx2 += realLength(n2)-realLength(n1)-1
+            if n1[idx1] instanceof Variable and n1[idx1].isListVar
+                if not _unify(n1[idx1],v1,n2.slice(idx2,idx2+n2RealLength-n1RealLength),v2,changes) then return false
+                idx2 += n2RealLength-n1RealLength-1
             else if not _unify(n1[idx1],v1,n2[idx2],v2,changes) then return false
             idx1++
             idx2++
     return true
+# little util function that removes list vars and binds them to []. It is used in _unify
+removeListVars = (arr, varList, changes)->
+    ret = []
+    for i in arr
+        if i instanceof Variable and i.isListVar 
+            if not _unify(i,varList,[],[],changes) then return false
+        else ret.push(i)
+    return ret
 
  # export functions so they are visible outside of this file
  extern "box", box

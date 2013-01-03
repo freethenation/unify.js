@@ -448,6 +448,12 @@
     }, {});
   });
 
+  test("list vairable ensure empty binding [$a,a]->[[]]", function() {
+    return this.fulltest([variable("$a"), variable("a")], [[]], {
+      "a": []
+    }, {});
+  });
+
   test("rollback successful unification", function() {
     var cobj1, cobj2, obj1, obj2;
     this.expect(3);
