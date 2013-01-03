@@ -56,7 +56,9 @@ class UnifyTest extends Test
         @num++
         obj1 = box(obj1)
         obj2 = box(obj2)
-        @ok(obj1.unify(obj2), "unify")
+        ret = obj1.unify(obj2)
+        #console.dir(obj1.getAll())
+        @ok(ret, "unify")
     unifyfailtest:(obj1, obj2) ->
         @boxtest(obj1)
         @boxtest(obj2)
@@ -203,6 +205,19 @@ test "multiple hidden variables [_,_,X] -> [1,2,3]", () ->
     @fulltest([variable("_"),variable("_"),variable("x")],[1,2,3],{"x":3},{})
 test "[[1,_,3],[1,2,3]] -> [X,X]", () ->
     @fulltest([[1,variable("_"),3],[1,2,3]],[variable("x"),variable("x")],{},{"x":[1,2,3]})
+#######################
+#greedy variable tests
+#######################
+test "simple greedy variable test [1,$a,b,5] -> [1,2,3,4,5]", () ->
+    @fulltest([1,variable("$a"),variable("b"),5],[1,2,3,4,5],{"a":[2,3],"b":4},{})
+test "both sides greedy variable test [1,$a,b,5] -> [1,b,3,5,b]", () ->
+    @fulltest([1,variable("$a"),variable("b"),5],[1,variable("b"),3,5,variable("b")],{"a":[5,3],"b":5},{})
+test "empty greedy variable test [1,$a,2]->[1,2] and [1,2]->[1,$a,2]", ()->
+    @fulltest([1,variable("$a"),2],[1,2],{"a":[]},{})
+    @fulltest([1,2],[1,variable("$a"),2],{},{"a":[]})
+test "greedy variable in both test [1,$a,3]->[$b,2,3] and [$b,2,3]->[1,$a,3]", ()->
+    @fulltest([1,variable("$a"),3],[variable("$b"),2,3],{"a":[2]},{"b":[1]})
+    @fulltest([variable("$b"),2,3],[1,variable("$a"),3],{"b":[1]},{"a":[2]})
 #######################
 #rollback tests
 #######################

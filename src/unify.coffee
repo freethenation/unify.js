@@ -167,7 +167,13 @@ boxit = (elem, varlist) ->
     else if elem instanceof Box
         return elem
     else if types.isArray elem
-        return map(elem, (i)->boxit(i,varlist))
+        hasGreedyVar = false
+        ret = map(elem, (i)->
+            if i instanceof Variable and i.isGreedy then hasGreedyVar = true
+            return boxit(i,varlist)
+        )
+        ret.hasGreedyVar = hasGreedyVar
+        return ret
     else if types.isObj elem
         a = []
         for key of elem
@@ -241,29 +247,33 @@ bind_tins = (t1,t2,changes) ->
 # v2: variableList 2
 # changes: list of changes
 _unify = (n1,v1,n2,v2,changes=[]) ->
-    return true if n1 == undefined and n2 == undefined
-    return true if n1 == null and n2 == null
-    return false if n1 == null or n2 == null
+    if n1 == undefined and n2 == undefined then return true
+    if n1 == null and n2 == null then return true
+    if n1 == null or n2 == null then return false
     if n1 instanceof Variable and n2 instanceof Variable
         t1 = get_tin(v1, n1)
         t2 = get_tin(v2, n2)
-        if not bind_tins(t1,t2,changes)
-            return false if not _unify(t1.node, t1.varlist, t2.node, t2.varlist, changes)
+        if not bind_tins(t1,t2,changes) then return _unify(t1.node, t1.varlist, t2.node, t2.varlist, changes)
     else if n1 instanceof Variable
         t1 = get_tin(v1,n1)
-        if not bind(t1, n2, v2, changes)
-            return false if not _unify(t1.node,t1.varlist,n2,v2, changes)
+        if not bind(t1, n2, v2, changes) then return _unify(t1.node,t1.varlist,n2,v2, changes)
     else if n2 instanceof Variable
-        t2 = get_tin(v2,n2)
-        if not bind(t2, n1, v1, changes)
-            return false if not _unify(t2.node,t2.varlist,n1,v1, changes)
-    else
-        if n1 instanceof Box and n2 instanceof Box and types.isValueType(n1.value) and types.isValueType(n2.value)
-            return n1.value == n2.value
-        else if types.isArray(n1) and types.isArray(n2)
-            return false if n1.length != n2.length
-            for idx in (num for num in [0..n1.length])
-                return false if not _unify(n1[idx],v1,n2[idx],v2, changes)
+        return _unify(n2,v2,n1,v1,changes)
+    else if n1 instanceof Box and n2 instanceof Box # and types.isValueType(n1.value) and types.isValueType(n2.value)
+        return n1.value == n2.value
+    else if types.isArray(n1) and types.isArray(n2)
+        if n1.length > n2.length then return _unify(n2,v2,n1,v2,changes)
+        if n1.length < n2.length and not n1.hasGreedyVar then return false
+        # at this point n1.length is always <= n2.length
+        idx1 = 0
+        idx2 = 0
+        while idx2 < n2.length
+            if n1[idx1] instanceof Variable and n1[idx1].isGreedy
+                if not _unify(n1[idx1],v1,n2.slice(idx2,idx2+n2.length-n1.length+1),v2,changes) then return false
+                idx2 += n2.length-n1.length
+            else if not _unify(n1[idx1],v1,n2[idx2],v2,changes) then return false
+            idx1++
+            idx2++
     return true
 
  # export functions so they are visible outside of this file
