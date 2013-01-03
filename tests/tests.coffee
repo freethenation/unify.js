@@ -131,6 +131,13 @@ test "variable unequal [1,3,2] -> [Y,Y,2]", () ->
     @unifyfailtest([1, 3, 2], [variable("y"), variable("y"), 2])
 test "variable unequal [1,X,X] -> [Z,Z,3]", () ->
     @unifyfailtest([1, variable("X"), variable("X")], [variable("Z"), variable("Z"), 3])
+test "unify fail no state change", ()->
+    @expect(2)
+    i1 = box([1,2,3])
+    i2a = [1,variable("a"),4]
+    i2b = box(i2a)
+    @ok(!i2b.unify(i1))
+    @deepEqual(i2a,i2b.unbox())
 #######################
 #misc tests
 #######################

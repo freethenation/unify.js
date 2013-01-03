@@ -269,6 +269,16 @@
     return this.unifyfailtest([1, variable("X"), variable("X")], [variable("Z"), variable("Z"), 3]);
   });
 
+  test("unify fail no state change", function() {
+    var i1, i2a, i2b;
+    this.expect(2);
+    i1 = box([1, 2, 3]);
+    i2a = [1, variable("a"), 4];
+    i2b = box(i2a);
+    this.ok(!i2b.unify(i1));
+    return this.deepEqual(i2a, i2b.unbox());
+  });
+
   test("simple black box unify test", function() {
     this.expect(1);
     return this.ok(box({

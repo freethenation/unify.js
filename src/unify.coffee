@@ -53,6 +53,8 @@ HIDDEN_VAR_PREFIX = "__HIDDEN__"
 isHiddenVar = (name) -> name.substring(0,HIDDEN_VAR_PREFIX.length) == HIDDEN_VAR_PREFIX
 class Variable
     constructor: (name, @typeFunc=null) ->
+        @isGreedy = name[0] == "$"
+        if @isGreedy then name = name.substring(1)
         if name == "_"
             @name = HIDDEN_VAR_PREFIX + g_hidden_var_counter
             g_hidden_var_counter += 1
@@ -90,7 +92,9 @@ class TreeTin
             @changes.push.apply(@changes, changes) #concat in place
             @changes.push.apply(tin.changes, changes) #concat in place
             return [this, tin]
-        else return null
+        else
+            map(changes, (change)->change())
+            return null
     bind: (varName, expr) ->
         vartin = @varlist[varName].endOfChain()
         if not vartin.isfree() then return null
