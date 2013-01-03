@@ -416,16 +416,13 @@
     });
   });
 
-  test("list variable in both test [1,$a,3]->[$b,2,3] and [$b,2,3]->[1,$a,3]", function() {
-    this.fulltest([1, variable("$a"), 3], [variable("$b"), 2, 3], {
-      "a": [2]
+  test("list variable in both test [1,$a,3]->[$b,2,3] and [$b,2,3]->[1,$a,3] and [$a,2,3]->[2,$a,3]", function() {
+    this.unifyfailtest([1, variable("$a"), 3], [variable("$b"), 2, 3]);
+    this.unifyfailtest([variable("$b"), 2, 3], [1, variable("$a"), 3]);
+    return this.fulltest([variable("$a"), 2, 3], [2, variable("$b"), 3], {
+      "a": []
     }, {
-      "b": [1]
-    });
-    return this.fulltest([variable("$b"), 2, 3], [1, variable("$a"), 3], {
-      "b": [1]
-    }, {
-      "a": [2]
+      "b": []
     });
   });
 
@@ -433,8 +430,22 @@
     return this.fulltest([1, variable("$a"), 3], [1, variable("$a"), 3], {
       "a": []
     }, {
-      "b": []
+      "a": []
     });
+  });
+
+  test("list variable in same place different length [$a,1,2]->[$b,2]", function() {
+    return this.fulltest([variable("$a"), 1, 2], [variable("$b"), 2], {
+      "a": []
+    }, {
+      "b": [1]
+    });
+  });
+
+  test("list variable reference [$a,a]->[1,2,[1,2]]", function() {
+    return this.fulltest([variable("$a"), variable("a")], [1, 2, [1, 2]], {
+      "a": [1, 2]
+    }, {});
   });
 
   test("rollback successful unification", function() {

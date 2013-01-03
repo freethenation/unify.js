@@ -262,15 +262,48 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
     else if n1 instanceof Box and n2 instanceof Box # and types.isValueType(n1.value) and types.isValueType(n2.value)
         return n1.value == n2.value
     else if types.isArray(n1) and types.isArray(n2)
-        if n1.length > n2.length then return _unify(n2,v2,n1,v2,changes)
-        if n1.length < n2.length and not n1.hasListVar then return false
-        # at this point n1.length is always <= n2.length
+        isListVar = (n)->n instanceof Variable and n.isListVar
+        realLength = (n)->n.length - (if n.hasListVar then 1 else 0)
+        removeListVars = (arr, varList)->
+            ret = []
+            for i in arr
+                if isListVar(i) 
+                    if not _unify(i,varList,[],[],changes) then return false
+                else ret.push(i)
+            return ret
+        if realLength(n1) == realLength(n2)
+            idx1 = 0
+            idx2 = 0
+            while idx1 < n1.length and idx2 < n2.length
+                if isListVar(n1[idx1])
+                    if not _unify(n1[idx1],v1,[],[],changes) then return false
+                    idx1++
+                    continue
+                else if isListVar(n2[idx2])
+                    if not _unify(n2[idx2],v2,[],[],changes) then return false
+                    idx2++
+                    continue
+                else
+                    if not _unify(n1[idx1],v1,n2[idx2],v2,changes) then return false
+                    idx1++
+                    idx2++
+            while idx1 < n1.length
+                if not _unify(n1[idx1],v1,[],[],changes) then return false
+                idx1++
+            while idx2 < n2.length
+                if not _unify(n2[idx2],v2,[],[],changes) then return false
+                idx2++
+            return true
+        if realLength(n1) > realLength(n2) then return _unify(n2,v2,n1,v1,changes)
+        # at this point realLength(n1) < realLength(n2)
+        n2 = removeListVars(n2, v2)
+        if !n2 then return false
         idx1 = 0
         idx2 = 0
         while idx2 < n2.length
-            if n1[idx1] instanceof Variable and n1[idx1].isListVar
-                if not _unify(n1[idx1],v1,n2.slice(idx2,idx2+n2.length-n1.length+1),v2,changes) then return false
-                idx2 += n2.length-n1.length
+            if isListVar(n1[idx1])
+                if not _unify(n1[idx1],v1,n2.slice(idx2,idx2+realLength(n2)-realLength(n1)),v2,changes) then return false
+                idx2 += realLength(n2)-realLength(n1)-1
             else if not _unify(n1[idx1],v1,n2[idx2],v2,changes) then return false
             idx1++
             idx2++

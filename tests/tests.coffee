@@ -215,11 +215,16 @@ test "both sides list variable test [1,$a,b,5] -> [1,b,3,5,b]", () ->
 test "empty list variable test [1,$a,2]->[1,2] and [1,2]->[1,$a,2]", ()->
     @fulltest([1,variable("$a"),2],[1,2],{"a":[]},{})
     @fulltest([1,2],[1,variable("$a"),2],{},{"a":[]})
-test "list variable in both test [1,$a,3]->[$b,2,3] and [$b,2,3]->[1,$a,3]", ()->
-    @fulltest([1,variable("$a"),3],[variable("$b"),2,3],{"a":[2]},{"b":[1]})
-    @fulltest([variable("$b"),2,3],[1,variable("$a"),3],{"b":[1]},{"a":[2]})
+test "list variable in both test [1,$a,3]->[$b,2,3] and [$b,2,3]->[1,$a,3] and [$a,2,3]->[2,$a,3]", ()->
+    @unifyfailtest([1,variable("$a"),3],[variable("$b"),2,3])
+    @unifyfailtest([variable("$b"),2,3],[1,variable("$a"),3])
+    @fulltest([variable("$a"),2,3],[2,variable("$b"),3],{"a":[]},{"b":[]})
 test "list variable in same place test [1,$a,3]->[1,$a,3]", ()->
-    @fulltest([1,variable("$a"),3],[1,variable("$a"),3],{"a":[]},{"b":[]})
+    @fulltest([1,variable("$a"),3],[1,variable("$a"),3],{"a":[]},{"a":[]})
+test "list variable in same place different length [$a,1,2]->[$b,2]", ()->
+    @fulltest([variable("$a"),1,2],[variable("$b"),2],{"a":[]},{"b":[1]})
+test "list variable reference [$a,a]->[1,2,[1,2]]", ()->
+    @fulltest([variable("$a"),variable("a")],[1,2,[1,2]],{"a":[1,2]},{})
 #######################
 #rollback tests
 #######################
