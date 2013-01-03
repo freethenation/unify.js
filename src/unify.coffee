@@ -53,8 +53,8 @@ HIDDEN_VAR_PREFIX = "__HIDDEN__"
 isHiddenVar = (name) -> name.substring(0,HIDDEN_VAR_PREFIX.length) == HIDDEN_VAR_PREFIX
 class Variable
     constructor: (name, @typeFunc=null) ->
-        @isGreedy = name[0] == "$"
-        if @isGreedy then name = name.substring(1)
+        @isListVar = name[0] == "$"
+        if @isListVar then name = name.substring(1)
         if name == "_"
             @name = HIDDEN_VAR_PREFIX + g_hidden_var_counter
             g_hidden_var_counter += 1
@@ -167,12 +167,12 @@ boxit = (elem, varlist) ->
     else if elem instanceof Box
         return elem
     else if types.isArray elem
-        hasGreedyVar = false
+        hasListVar = false
         ret = map(elem, (i)->
-            if i instanceof Variable and i.isGreedy then hasGreedyVar = true
+            if i instanceof Variable and i.isListVar then hasListVar = true
             return boxit(i,varlist)
         )
-        ret.hasGreedyVar = hasGreedyVar
+        ret.hasListVar = hasListVar
         return ret
     else if types.isObj elem
         a = []
@@ -263,12 +263,12 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
         return n1.value == n2.value
     else if types.isArray(n1) and types.isArray(n2)
         if n1.length > n2.length then return _unify(n2,v2,n1,v2,changes)
-        if n1.length < n2.length and not n1.hasGreedyVar then return false
+        if n1.length < n2.length and not n1.hasListVar then return false
         # at this point n1.length is always <= n2.length
         idx1 = 0
         idx2 = 0
         while idx2 < n2.length
-            if n1[idx1] instanceof Variable and n1[idx1].isGreedy
+            if n1[idx1] instanceof Variable and n1[idx1].isListVar
                 if not _unify(n1[idx1],v1,n2.slice(idx2,idx2+n2.length-n1.length+1),v2,changes) then return false
                 idx2 += n2.length-n1.length
             else if not _unify(n1[idx1],v1,n2[idx2],v2,changes) then return false

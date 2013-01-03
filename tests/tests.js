@@ -393,21 +393,21 @@
     });
   });
 
-  test("simple greedy variable test [1,$a,b,5] -> [1,2,3,4,5]", function() {
+  test("simple list variable test [1,$a,b,5] -> [1,2,3,4,5]", function() {
     return this.fulltest([1, variable("$a"), variable("b"), 5], [1, 2, 3, 4, 5], {
       "a": [2, 3],
       "b": 4
     }, {});
   });
 
-  test("both sides greedy variable test [1,$a,b,5] -> [1,b,3,5,b]", function() {
+  test("both sides list variable test [1,$a,b,5] -> [1,b,3,5,b]", function() {
     return this.fulltest([1, variable("$a"), variable("b"), 5], [1, variable("b"), 3, 5, variable("b")], {
       "a": [5, 3],
       "b": 5
     }, {});
   });
 
-  test("empty greedy variable test [1,$a,2]->[1,2] and [1,2]->[1,$a,2]", function() {
+  test("empty list variable test [1,$a,2]->[1,2] and [1,2]->[1,$a,2]", function() {
     this.fulltest([1, variable("$a"), 2], [1, 2], {
       "a": []
     }, {});
@@ -416,7 +416,7 @@
     });
   });
 
-  test("greedy variable in both test [1,$a,3]->[$b,2,3] and [$b,2,3]->[1,$a,3]", function() {
+  test("list variable in both test [1,$a,3]->[$b,2,3] and [$b,2,3]->[1,$a,3]", function() {
     this.fulltest([1, variable("$a"), 3], [variable("$b"), 2, 3], {
       "a": [2]
     }, {
@@ -426,6 +426,14 @@
       "b": [1]
     }, {
       "a": [2]
+    });
+  });
+
+  test("list variable in same place test [1,$a,3]->[1,$a,3]", function() {
+    return this.fulltest([1, variable("$a"), 3], [1, variable("$a"), 3], {
+      "a": []
+    }, {
+      "b": []
     });
   });
 
