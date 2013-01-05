@@ -169,7 +169,9 @@ boxit = (elem, varlist) ->
     else if types.isArray elem
         hasListVar = false
         ret = map(elem, (i)->
-            if i instanceof Variable and i.isListVar then hasListVar = true
+            if i instanceof Variable and i.isListVar
+                if hasListVar then throw "There can only be one list variable in an array!"
+                hasListVar = true
             return boxit(i,varlist)
         )
         ret.hasListVar = hasListVar

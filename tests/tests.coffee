@@ -152,6 +152,12 @@ test "unbox bound variable", () ->
     i2 = box([1,1])
     @ok(i1.unify(i2))
     @deepEqual(i1.unbox(),i2.unbox())
+test "seperate trees diff vars", ()->
+    @expect(2)
+    i1 = box([1,variable("a")])
+    i2 = box([variable("a"),2])
+    @ok(i1.unify(i2))
+    @deepEqual(i1.unbox(),i2.unbox())
 #######################
 #bind tests
 #######################
@@ -227,6 +233,13 @@ test "list variable reference [$a,a]->[1,2,[1,2]]", ()->
     @fulltest([variable("$a"),variable("a")],[1,2,[1,2]],{"a":[1,2]},{})
 test "list vairable ensure empty binding [$a,a]->[[]]", ()->
     @fulltest([variable("$a"),variable("a")],[[]],{"a":[]},{})
+test "ensure only 1 list var in array", ()->
+    @expect(1)
+    try
+        @boxtest([variable("$a"),variable("$b")])
+    catch ex
+        @ok(true)
+        @ok(true)
 #######################
 #rollback tests
 #######################
