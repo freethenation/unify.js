@@ -158,6 +158,8 @@ test "seperate trees diff vars", ()->
     i2 = box([variable("a"),2])
     @ok(i1.unify(i2))
     @deepEqual(i1.unbox(),i2.unbox())
+test "possible infinite recursion", ()->
+    @unifyfailtest(["derive",["add",33,10],"X",variable("OUT")], ["derive",variable("X"),variable("X"),1])
 #######################
 #bind tests
 #######################

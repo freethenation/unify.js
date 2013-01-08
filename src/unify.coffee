@@ -255,10 +255,12 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
     if n1 instanceof Variable and n2 instanceof Variable
         t1 = get_tin(v1, n1)
         t2 = get_tin(v2, n2)
-        if not bind_tins(t1,t2,changes) then return _unify(t1.node, t1.varlist, t2.node, t2.varlist, changes)
+        if bind_tins(t1,t2,changes) then return true
+        return _unify(t1.node, t1.varlist, t2.node, t2.varlist, changes)
     else if n1 instanceof Variable
         t1 = get_tin(v1,n1)
-        if not bind(t1, n2, v2, changes) then return _unify(t1.node,t1.varlist,n2,v2, changes)
+        if bind(t1, n2, v2, changes) then return true
+        return _unify(t1.node,t1.varlist,n2,v2, changes)
     else if n2 instanceof Variable
         return _unify(n2,v2,n1,v1,changes)
     else if n1 instanceof Box and n2 instanceof Box
@@ -292,7 +294,8 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
             else if not _unify(n1[idx1],v1,n2[idx2],v2,changes) then return false
             idx1++
             idx2++
-    return true
+        return true
+    return false
 # little util function that removes list vars and binds them to []. It is used in _unify
 removeListVars = (arr, varList, changes)->
     ret = []
