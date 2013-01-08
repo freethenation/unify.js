@@ -250,9 +250,9 @@ bind_tins = (t1,t2,changes) ->
 # changes: list of changes
 _unify = (n1,v1,n2,v2,changes=[]) ->
     if n1 == undefined and n2 == undefined then return true
-    if n1 == null and n2 == null then return true
-    if n1 == null or n2 == null then return false
-    if n1 instanceof Variable and n2 instanceof Variable
+    else if n1 == null and n2 == null then return true
+    else if n1 == null or n2 == null then return false
+    else if n1 instanceof Variable and n2 instanceof Variable
         t1 = get_tin(v1, n1)
         t2 = get_tin(v2, n2)
         if bind_tins(t1,t2,changes) then return true
@@ -295,7 +295,7 @@ _unify = (n1,v1,n2,v2,changes=[]) ->
             idx1++
             idx2++
         return true
-    return false
+    return n1 == n2
 # little util function that removes list vars and binds them to []. It is used in _unify
 removeListVars = (arr, varList, changes)->
     ret = []
