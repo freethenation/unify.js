@@ -2,12 +2,9 @@
 if typeof module == 'undefined' then window.unify={}
 extern=(name, o)->if typeof module == 'undefined' then window.unify[name] = o else module.exports[name] = o
 str=(o)->
-    if typeof o == "undefined"
-        return "undefined"
-    else if o==null
-        return "null"
-    else
-       return o.toString()
+    if typeof o == "undefined" then return "undefined"
+    else if o==null then return "null"
+    else return o.toString()
 map=(arr, func)->(func(i) for i in arr)
 
 # type testing functions
@@ -23,21 +20,19 @@ types = {
 }
 
 # util function to convert data types to strings
-toJson=(elem) ->
-    if types.isArray elem
-        return "[#{ map(elem, (i)->toJson(i)).join(',') }]"
-    else if elem instanceof Box or elem instanceof VarTin or elem instanceof TreeTin or elem instanceof Variable or elem instanceof DictFlag
-        return str(elem)
-    else if types.isObj elem
-        return "{#{ (( e + ':' + toJson(elem[e])) for e of elem).join(',') }}"
-    else if types.isStr elem
+toJson=(elem)->
+    if types.isArray(elem)
+        return "[#{ map(elem, (i)->toJson(i)).join() }]"
+    if types.isStr(elem)
         return "\"#{ elem }\""
-    else
-        return str(elem)
+    ret = str(elem)
+    if types.isObj(elem) and ret == "[object Object]"
+        return "{#{ (( e + ':' + toJson(elem[e])) for e of elem).join() }}"
+    return ret
 
 # metadata to indicate this was a dictionary
 class DictFlag
-    toString: () -> "new DictFlag()"
+    toString: () -> "DICT_FLAG"
 DICT_FLAG = new DictFlag()
 
 class Box
@@ -46,7 +41,7 @@ class Box
             @value = v
         else
             throw "Can only box value types, not #{ toJson v }"
-    toString: () -> ("new Box(#{ toJson(@value) })")
+    toString: () -> toJson(@value)
 
 g_hidden_var_counter = 1
 HIDDEN_VAR_PREFIX = "__HIDDEN__"
@@ -61,18 +56,18 @@ class Variable
         else
             @name = name
     isHiddenVar: () -> isHiddenVar @name
-    toString: () -> "variable(#{ toJson @name })"
+    toString: () -> "Variable(#{ toJson @name })"
   
 class TreeTin
     constructor: (@node, @varlist)->
         @changes = []
-    toString: () -> 
-        ### Returns the representation of the tin. This is very useful for inspecting the current state of the tin. ###
-        "new TreeTin(#{ toJson @node }, #{ toJson @varlist})"
-    get: (varName)->
+    toString: () -> toJson(@node)
+    getTin: (varName)->
         vartin = @varlist[varName]
         if not vartin then throw "Variable #{varName} not in this tin"
-        vartin = vartin.endOfChain()
+        return vartin.endOfChain()
+    get: (varName)->
+        vartin = @getTin(varName)
         if not vartin.node
             return new Variable(vartin.name)
         else
@@ -121,9 +116,7 @@ class VarTin
         t = @endOfChain()
         return t.node == null and t.varlist == null
     isHiddenVar: () -> isHiddenVar @name
-    toString:() -> 
-        ### Returns the representation of the tin. This is very useful for inspecting the current state of the tin. ###
-        "new VarTin(#{ toJson @name }, #{ toJson @node }, #{ toJson @varlist})"
+    toString:() -> "VarTin(#{ toJson @name })"
     unbox: () ->
         if @node then return unboxit(@node, @varlist) else return new Variable(@name)
         
