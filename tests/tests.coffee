@@ -113,10 +113,12 @@ test "variable equal [1,X,X] -> [Z,Z,1]", () ->
 #######################
 # type checking tests
 #######################
-test "variable equal [X:isNum,X] -> [1,1]", ()->
+test "type test [X:isNum,X] -> [1,1]", ()->
     @fulltest([variable("a", types.isNum), variable("a")], [1,1], {a:1}, {})
-test "variable equal [X:isNum,X] -> ['str','str']", ()->
+test "type test [X:isNum,X] -> ['str','str']", ()->
     @unifyfailtest([variable("a", types.isNum), variable("a")], ['str','str'], {a:1}, {})
+test "type test [X:isNum,Y:isNum] -> [1,[[1]]]", ()->
+    @unifyfailtest([variable("X", types.isNum), variable("Y", types.isNum)], [1,[[1]]], {X:1}, {})
 test "variable equal [X:isNum,X:isStr] -> ['str','str']", ()->
     threw = false
     try
@@ -152,6 +154,10 @@ test "unbox bound variable", () ->
     i2 = box([1,1])
     @ok(i1.unify(i2))
     @deepEqual(i1.unbox(),i2.unbox())
+test "unbox with maxDepth", () ->
+    @expect(1)
+    i1 = box([1,1])
+    @ok(!types.isNum(i1.unbox(1)[0]))
 test "seperate trees diff vars", ()->
     @expect(2)
     i1 = box([1,variable("a")])

@@ -4,8 +4,10 @@ extern=(name, o)->if typeof module == 'undefined' then window.unify[name] = o el
 str=(o)->
     if typeof o == "undefined"
         return "undefined"
-    else if o==null
+    if o==null
         return "null"
+    if o.toString() == "[object Object]"
+        
     else
        return o.toString()
 map=(arr, func)->(func(i) for i in arr)
@@ -21,6 +23,7 @@ types = {
     isValueType: (o) -> types.isBool(o) or types.isStr(o) or types.isNum(o)
     isFunc: (o) -> !!(o && o.constructor && o.call && o.apply)
 }
+types[k].maxDepth = 1 for k of types
 
 # util function to convert data types to strings
 toJson=(elem) ->
@@ -69,21 +72,21 @@ class TreeTin
     toString: () -> 
         ### Returns the representation of the tin. This is very useful for inspecting the current state of the tin. ###
         "new TreeTin(#{ toJson @node }, #{ toJson @varlist})"
-    get: (varName)->
+    get: (varName, maxDepth)->
         vartin = @varlist[varName]
         if not vartin then throw "Variable #{varName} not in this tin"
         vartin = vartin.endOfChain()
         if not vartin.node
             return new Variable(vartin.name)
         else
-            return unboxit(vartin.node, vartin.varlist)
-    getAll: () ->
+            return unboxit(vartin.node, vartin.varlist, maxDepth)
+    getAll: (maxDepth) ->
         j = {}
         for key of @varlist
-            j[key] = @get(key) if !isHiddenVar key
+            j[key] = @get(key, maxDepth) if !isHiddenVar key
         return j
-    unbox: () ->
-        unboxit @node, @varlist
+    unbox: (maxDepth) ->
+        unboxit @node, @varlist, maxDepth
     unify: (tin) ->
         changes = []
         if !(tin instanceof TreeTin) then tin = box(tin)
@@ -124,19 +127,20 @@ class VarTin
     toString:() -> 
         ### Returns the representation of the tin. This is very useful for inspecting the current state of the tin. ###
         "new VarTin(#{ toJson @name }, #{ toJson @node }, #{ toJson @varlist})"
-    unbox: () ->
-        if @node then return unboxit(@node, @varlist) else return new Variable(@name)
+    unbox: (maxDepth) ->
+        if @node then return unboxit(@node, @varlist, maxDepth) else return new Variable(@name)
         
 # Unbox the result and get back plain JS
-unboxit = (tree, varlist) ->
+unboxit = (tree, varlist, maxDepth=-1) ->
+    if maxDepth==0 then return tree
     if types.isArray tree
         if tree.length > 0 and tree[tree.length-1] == DICT_FLAG
             hash = new Object()
             for e in tree[0...tree.length-1]
-                hash[unboxit(e[0], varlist)] = unboxit(e[1], varlist)
+                hash[unboxit(e[0], varlist, maxDepth-1)] = unboxit(e[1], varlist, maxDepth-1)
             return hash
         else
-            return map(tree, (i)->unboxit(i,varlist))
+            return map(tree, (i)->unboxit(i,varlist, maxDepth-1))
     else if tree instanceof Box
         return tree.value
     else if tree instanceof Variable
@@ -146,7 +150,7 @@ unboxit = (tree, varlist) ->
             catch error # Is unbound
                 return tree
             if tin.node? and tin.varlist?
-                return unboxit(tin.node,tin.varlist)
+                return unboxit(tin.node,tin.varlist, maxDepth-1)
             else
                 return tree
         else
@@ -208,7 +212,7 @@ bind = (t, node, varlist, changes) ->
     t = t.endOfChain()
     return false if not t.isfree()
     if t.typeFunc != null
-        unboxed = unboxit(node, varlist)
+        unboxed = unboxit(node, varlist, t.typeFunc.maxDepth)
         if unboxed instanceof Variable and Variable.typeFunc != t.typeFunc
             return false
         else if not t.typeFunc(unboxed)
