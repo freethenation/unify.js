@@ -13,10 +13,11 @@ types = {
     isBool: (o) -> typeof o == "boolean"
     isArray: (o) -> o? && Array.isArray o
     isStr: (o) -> typeof o == "string"
-    isNum: (o) -> typeof o == "number"
+    isNum: (o) -> typeof o == "number" && !isNaN(o)
     isObj: (o) -> o != null and not types.isArray(o) and typeof o == "object"
     isValueType: (o) -> types.isBool(o) or types.isStr(o) or types.isNum(o)
     isFunc: (o) -> !!(o && o.constructor && o.call && o.apply)
+    isInt: (o) -> isNum(o) && o == Math.floor(o)
 }
 types[k].maxDepth = 1 for k of types
 
