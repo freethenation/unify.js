@@ -1,7 +1,8 @@
 [![Build Status](https://travis-ci.org/freethenation/unify.js.png?branch=master)](https://travis-ci.org/freethenation/unify.js)
 # Unify.js
 _________________________
-Unify.js is an efficient javascript unification library that operates in linear time.
+Unify.js is an efficient javascript unification library that operates in linear time. It can be installed via
+npm using the command `npm install unify`.
  
 # What is Unification?
 _________________________
