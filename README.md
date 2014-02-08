@@ -71,7 +71,7 @@ else {
 }
 ```
     
-You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/21/edit)
+You can play with this example at JS Bin by clicking [here](http://jsbin.com/fased/2/edit)
 
 If you were unable to follow along don't worry the various aspects of the code above are explained in more detail below.
 
@@ -121,7 +121,7 @@ else {
 //Unification successful! X=1
 ```
 
-You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/18/edit)
+You can play with this example at JS Bin by clicking [here](http://jsbin.com/nipok/1/edit)
 
 In the above example the first unification fails because `isNum` function returns false when the value `"string"` is passed. The second unification succeeds because `isNum` returns true when the value `1` is passed.
 
@@ -148,7 +148,7 @@ else {
 //Unification successful! a=[3,4]
 ```
 
-You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/28/edit)
+You can play with this example at JS Bin by clicking [here](http://jsbin.com/ratus/1/edit)
 
 Looking at the example above the variable `a` is referenced twice, once as `"a"` and once as `"$a"`. The first reference, `"a"`, binds as normal to the first element in the array, `[3,4]`. The second reference, `"$a"` binds to the remaining elements in the list, `[3,4]`.
 
@@ -221,7 +221,7 @@ rectangleValidator.rollback();
 //invalidRectangle is invalid!
 ```
 
-You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/6/edit)
+You can play with this example at JS Bin by clicking [here](http://jsbin.com/xiya/1/edit)
 
 ### Extracting data
 
@@ -261,7 +261,7 @@ extractor.rollback();
 //"bottomRight: [1,1]"
 ```
 	
-You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/8/edit)
+You can play with this example at JS Bin by clicking [here](http://jsbin.com/jujim/1/edit)
 
 ### Transforming data
 
@@ -326,4 +326,4 @@ transform.rollback();
 //"line 3: [[0,1],[0,0]]"
 ```
     
-You can play with this example at JS Bin by clicking [here](http://jsbin.com/unifyvalidate/17/edit)
+You can play with this example at JS Bin by clicking [here](http://jsbin.com/vaho/1/edit)
