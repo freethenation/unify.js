@@ -11,7 +11,7 @@ all: lib/unify.js lib/unify.min.js test
 clean:
 	rm -rf lib
 
-test:
+test: lib/unify.js
 	coffee tests/tests.coffee
 
 lib/%.min.js: lib/%.js
