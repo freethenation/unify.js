@@ -1,3 +1,5 @@
+#!/usr/bin/env coffee
+
 #General Util Functions
 str=(obj)->
     if obj == null then "null"
@@ -261,3 +263,6 @@ test "rollback successful unification", () ->
     cobj1.rollback()
     @deepEqual(obj1, cobj1.unbox())
     @deepEqual(obj2, cobj2.unbox())
+
+if require.main == module
+    exports.RunAll()
